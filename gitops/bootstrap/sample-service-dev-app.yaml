@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sample-service-dev
+  namespace: argocd
+spec:
+  project: platform-apps
+  source:
+    repoURL: https://github.com/your-org/your-repo.git
+    targetRevision: main
+    path: deploy/helm/sample-service
+    helm:
+      valueFiles:
+        - ../../../gitops/environments/dev/sample-service-values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sample-service
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,11 @@
+# Terraform/OpenTofu
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# DORA local events (do not commit runtime data)
+dora/events/
+
+# OS/editor
+.DS_Store

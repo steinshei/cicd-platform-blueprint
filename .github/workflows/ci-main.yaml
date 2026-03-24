@@ -1,0 +1,72 @@
+name: ci-main
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  id-token: write
+  security-events: write
+  attestations: write
+
+jobs:
+  pipeline:
+    uses: ./.github/workflows/reusable-ci.yml
+    with:
+      service_name: sample-service
+      context_dir: apps/sample-service
+      dockerfile: apps/sample-service/Dockerfile
+      run_tests: true
+    secrets:
+      registry_username: ${{ secrets.REGISTRY_USERNAME }}
+      registry_password: ${{ secrets.REGISTRY_PASSWORD }}
+      cosign_private_key: ${{ secrets.COSIGN_PRIVATE_KEY }}
+      cosign_password: ${{ secrets.COSIGN_PASSWORD }}
+
+  update-dev-gitops:
+    if: github.event_name == 'push'
+    needs: [pipeline]
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update dev image tag
+        run: |
+          set -euo pipefail
+          IMAGE_TAG="${GITHUB_SHA}"
+          FILE="gitops/environments/dev/sample-service-values.yaml"
+          sed -i.bak -E "s|^  tag: .*|  tag: ${IMAGE_TAG}|" "$FILE"
+          rm -f "$FILE.bak"
+
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gitops/environments/dev/sample-service-values.yaml
+          if git diff --cached --quiet; then
+            echo "No GitOps changes to commit"
+            exit 0
+          fi
+          git commit -m "deploy(dev): sample-service ${GITHUB_SHA}"
+          git push
+
+      - name: Append deployment audit summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOT
+          ### Deployment Audit
+          - environment: dev
+          - service: sample-service
+          - image_tag: ${GITHUB_SHA}
+          - actor: ${GITHUB_ACTOR}
+          - workflow_run_id: ${GITHUB_RUN_ID}
+          EOT
+
+      - name: Emit DORA deployment event
+        run: |
+          ./scripts/collect_dora_event.sh deployment dev sample-service "${GITHUB_SHA}" "success"

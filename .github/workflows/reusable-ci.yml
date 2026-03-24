@@ -1,0 +1,128 @@
+name: reusable-ci
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      context_dir:
+        required: true
+        type: string
+      dockerfile:
+        required: true
+        type: string
+      run_tests:
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      registry_username:
+        required: true
+      registry_password:
+        required: true
+      cosign_private_key:
+        required: false
+      cosign_password:
+        required: false
+
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
+  attestations: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_REPO: ${{ github.repository_owner }}/${{ inputs.service_name }}
+
+jobs:
+  validate-build-scan:
+    runs-on: ubuntu-latest
+    outputs:
+      image_ref: ${{ steps.meta.outputs.image_ref }}
+      image_digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image metadata
+        id: meta
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_SHA}"
+          echo "image_ref=${REGISTRY}/${IMAGE_REPO}:${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Run unit tests
+        if: inputs.run_tests
+        run: |
+          set -euo pipefail
+          go test ./...
+        working-directory: ${{ inputs.context_dir }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.registry_username }}
+          password: ${{ secrets.registry_password }}
+
+      - name: Build and push container
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context_dir }}
+          file: ${{ inputs.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.image_ref }}
+          provenance: true
+          sbom: true
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate SBOM (SPDX)
+        run: |
+          set -euo pipefail
+          syft "${{ steps.meta.outputs.image_ref }}" -o spdx-json > sbom.spdx.json
+
+      - name: Scan image vulnerabilities
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ steps.meta.outputs.image_ref }}
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image with Cosign key
+        if: secrets.cosign_private_key != ''
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.cosign_private_key }}
+          COSIGN_PASSWORD: ${{ secrets.cosign_password }}
+        run: |
+          set -euo pipefail
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${{ steps.meta.outputs.image_ref }}"
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ inputs.service_name }}-${{ github.sha }}
+          path: sbom.spdx.json
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ steps.meta.outputs.image_ref }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
