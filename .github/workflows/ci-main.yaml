@@ -58,6 +58,14 @@ jobs:
           add-paths: |
             gitops/environments/dev/sample-service-values.yaml
 
+      - name: Enable auto-merge for dev GitOps PR
+        if: steps.cpr.outputs.pull-request-number != ''
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
+
       - name: Append deployment audit summary
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<EOT
