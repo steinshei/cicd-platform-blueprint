@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   id-token: write
   security-events: write
   attestations: write
@@ -40,24 +41,22 @@ jobs:
           sed -i.bak -E "s|^  tag: .*|  tag: ${IMAGE_TAG}|" "$FILE"
           rm -f "$FILE.bak"
 
-      - name: Commit and push
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add gitops/environments/dev/sample-service-values.yaml
-          if git diff --cached --quiet; then
-            echo "No GitOps changes to commit"
-            echo "gitops_push_status=no_change" >> "$GITHUB_ENV"
-            exit 0
-          fi
-          git commit -m "deploy(dev): sample-service ${GITHUB_SHA}"
-          if git push; then
-            echo "gitops_push_status=success" >> "$GITHUB_ENV"
-          else
-            echo "::warning::GitOps push was blocked (likely by branch protection)."
-            echo "gitops_push_status=blocked" >> "$GITHUB_ENV"
-          fi
+      - name: Create GitOps PR for dev update
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "deploy(dev): sample-service ${{ github.sha }}"
+          branch: "bot/gitops-dev-sample-service-${{ github.run_id }}"
+          delete-branch: true
+          title: "deploy(dev): sample-service ${{ github.sha }}"
+          body: |
+            Automated dev GitOps update.
+            - service: sample-service
+            - image_tag: `${{ github.sha }}`
+            - source_run: `${{ github.run_id }}`
+          add-paths: |
+            gitops/environments/dev/sample-service-values.yaml
 
       - name: Append deployment audit summary
         run: |
@@ -68,7 +67,8 @@ jobs:
           - image_tag: ${GITHUB_SHA}
           - actor: ${GITHUB_ACTOR}
           - workflow_run_id: ${GITHUB_RUN_ID}
-          - gitops_push_status: ${gitops_push_status:-unknown}
+          - gitops_pr_operation: ${{ steps.cpr.outputs.pull-request-operation || 'none' }}
+          - gitops_pr_number: ${{ steps.cpr.outputs.pull-request-number || 'n/a' }}
           EOT
 
       - name: Emit DORA deployment event

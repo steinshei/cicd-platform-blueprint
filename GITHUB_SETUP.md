@@ -48,5 +48,5 @@ GitHub -> Settings -> Secrets and variables -> Actions：
 ## 5. 验证
 
 - 提交一个 PR：应触发 `ci-main` + `security-sast`
-- 合并到 `main`：应自动更新 `gitops/environments/dev/sample-service-values.yaml`
+- 合并到 `main`：应自动创建 GitOps PR，更新 `gitops/environments/dev/sample-service-values.yaml`
 - 手工触发 `promote`：先过 `staging` 审批，再过 `prod` 审批
