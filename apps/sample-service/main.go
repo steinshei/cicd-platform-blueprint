@@ -21,7 +21,5 @@ func main() {
 		_, _ = io.WriteString(w, "sample-service running\n")
 	})
 
-	// nosemgrep: go.lang.security.audit.net.use-tls.use-tls
-	// TLS is terminated at ingress/load balancer in this demo service.
-	_ = http.ListenAndServe(":"+port, nil)
+	_ = http.ListenAndServe(":"+port, nil) // nosemgrep: go.lang.security.audit.net.use-tls.use-tls -- TLS is terminated at ingress/load balancer in this demo service.
 }
