@@ -89,7 +89,7 @@ jobs:
           syft "${{ steps.meta.outputs.image_ref }}" -o spdx-json > sbom.spdx.json
 
       - name: Scan image vulnerabilities
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.24.0
         with:
           image-ref: ${{ steps.meta.outputs.image_ref }}
           format: table
