@@ -2,11 +2,23 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "DORAEvent",
   "type": "object",
-  "required": ["event_type", "timestamp", "environment", "service", "version", "status", "actor"],
+  "required": [
+    "event_type",
+    "timestamp",
+    "environment",
+    "service",
+    "version",
+    "status",
+    "actor"
+  ],
   "properties": {
     "event_type": {
       "type": "string",
-      "enum": ["deployment", "incident", "restore"]
+      "enum": [
+        "deployment",
+        "incident",
+        "restore"
+      ]
     },
     "timestamp": {
       "type": "string",
@@ -14,15 +26,31 @@
     },
     "environment": {
       "type": "string",
-      "enum": ["dev", "staging", "prod"]
+      "enum": [
+        "dev",
+        "staging",
+        "prod"
+      ]
     },
-    "service": { "type": "string" },
-    "version": { "type": "string" },
+    "service": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
     "status": {
       "type": "string",
-      "enum": ["success", "failed", "partial"]
+      "enum": [
+        "success",
+        "failed",
+        "partial"
+      ]
     },
-    "actor": { "type": "string" },
-    "run_id": { "type": "string" }
+    "actor": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string"
+    }
   }
 }
