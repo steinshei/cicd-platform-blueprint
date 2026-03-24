@@ -38,10 +38,12 @@ GitHub -> Settings -> Environments：
 
 GitHub -> Settings -> Secrets and variables -> Actions：
 
-- `REGISTRY_USERNAME`
-- `REGISTRY_PASSWORD`
-- `COSIGN_PRIVATE_KEY`
-- `COSIGN_PASSWORD`
+- 可选：`COSIGN_PRIVATE_KEY`
+- 可选：`COSIGN_PASSWORD`
+
+说明：
+- GHCR 推送默认使用 `GITHUB_TOKEN`，不再强制 `REGISTRY_USERNAME/REGISTRY_PASSWORD`。
+- 未配置 Cosign 私钥时，流水线会走 OIDC keyless 签名。
 
 ## 5. 验证
 

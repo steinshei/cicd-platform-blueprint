@@ -36,8 +36,7 @@
 1. 在 GitHub 中创建 Environments：`dev`、`staging`、`prod`
 2. 为 `staging` 和 `prod` 环境配置必需审批人
 3. 配置环境密钥：
-   - `REGISTRY_USERNAME`、`REGISTRY_PASSWORD`
-   - `COSIGN_PRIVATE_KEY`、`COSIGN_PASSWORD`（或使用基于 OIDC 的无密钥签名）
+   - 可选：`COSIGN_PRIVATE_KEY`、`COSIGN_PASSWORD`（未配置时默认使用基于 OIDC 的无密钥签名）
 4. 开启 OIDC，并确保 Actions 具备读写权限
 
 ## 标准发布链路
