@@ -1,0 +1,6 @@
+# Demo service listens behind ingress/LB TLS termination.
+apps/sample-service/main.go
+
+# Kyverno policies are policy CRDs, not Pod manifests.
+security/kyverno/disallow-latest-tag.yaml
+security/kyverno/require-resources.yaml
