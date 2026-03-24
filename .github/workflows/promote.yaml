@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   promote-staging:
@@ -81,21 +82,40 @@ jobs:
           sed -i.bak -E "s|^  tag: .*|  tag: ${IMAGE_TAG}|" "$FILE"
           rm -f "$FILE.bak"
 
-      - name: Commit prod
-        env:
-          SERVICE: ${{ github.event.inputs.service }}
-          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+      - name: Create prod promotion PR (manual merge required)
+        id: prod_pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "promote(prod): ${{ github.event.inputs.service }} ${{ github.event.inputs.image_tag }}"
+          branch: "promote/prod-${{ github.event.inputs.service }}-${{ github.run_id }}"
+          delete-branch: true
+          title: "promote(prod): ${{ github.event.inputs.service }} ${{ github.event.inputs.image_tag }}"
+          body: |
+            Automated prod promotion PR.
+            - service: `${{ github.event.inputs.service }}`
+            - image_tag: `${{ github.event.inputs.image_tag }}`
+            - source_run: `${{ github.run_id }}`
+
+            Manual review and merge are required for production.
+          labels: |
+            prod
+            manual-approval-required
+          add-paths: |
+            gitops/environments/prod/${{ github.event.inputs.service }}-values.yaml
+
+      - name: Append prod promotion summary
         run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "gitops/environments/prod/${SERVICE}-values.yaml"
-          git commit -m "promote(prod): ${SERVICE} ${IMAGE_TAG}"
-          git push
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOT
+          ### Prod Promotion
+          - strategy: manual merge required
+          - pr_number: ${{ steps.prod_pr.outputs.pull-request-number || 'n/a' }}
+          - pr_operation: ${{ steps.prod_pr.outputs.pull-request-operation || 'none' }}
+          EOT
 
       - name: DORA prod event
         env:
           SERVICE: ${{ github.event.inputs.service }}
           IMAGE_TAG: ${{ github.event.inputs.image_tag }}
         run: |
-          ./scripts/collect_dora_event.sh deployment prod "${SERVICE}" "${IMAGE_TAG}" "success"
+          ./scripts/collect_dora_event.sh deployment prod "${SERVICE}" "${IMAGE_TAG}" "pending_approval"
