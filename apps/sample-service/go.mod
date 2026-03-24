@@ -1,3 +1,3 @@
 module example.com/sample-service
 
-go 1.22
+go 1.25
