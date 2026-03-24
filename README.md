@@ -44,8 +44,9 @@
 1. 向 `main` 提交 PR，触发 CI（测试、构建、扫描）
 2. 合并到 `main` 后，构建并推送镜像，同时生成签名和 SBOM
 3. 工作流自动更新 `gitops/environments/dev` 中的镜像 tag
-4. Argo CD 自动同步并部署到 `dev`
-5. 通过 promotion 工作流晋级到 `staging`，再晋级到 `prod`（带人工审批）
+4. 工作流自动创建 GitOps PR（更新 `gitops/environments/dev` 的镜像 tag）
+5. 合并该 GitOps PR 后，Argo CD 自动同步并部署到 `dev`
+6. 通过 promotion 工作流晋级到 `staging`，再晋级到 `prod`（带人工审批）
 
 ## 快速开始
 
