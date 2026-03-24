@@ -89,7 +89,7 @@ jobs:
           syft "${{ steps.meta.outputs.image_ref }}" -o spdx-json > sbom.spdx.json
 
       - name: Scan image vulnerabilities
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.24.0
         with:
           image-ref: ${{ steps.meta.outputs.image_ref }}
           format: table
@@ -101,20 +101,17 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
 
-      - name: Sign image with Cosign key
-        if: secrets.cosign_private_key != ''
+      - name: Sign image (key or keyless)
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.cosign_private_key }}
           COSIGN_PASSWORD: ${{ secrets.cosign_password }}
         run: |
           set -euo pipefail
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${{ steps.meta.outputs.image_ref }}"
-
-      - name: Sign image with Cosign keyless (OIDC)
-        if: secrets.cosign_private_key == ''
-        run: |
-          set -euo pipefail
-          cosign sign --yes "${{ steps.meta.outputs.image_ref }}"
+          if [ -n "${COSIGN_PRIVATE_KEY:-}" ]; then
+            cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${{ steps.meta.outputs.image_ref }}"
+          else
+            cosign sign --yes "${{ steps.meta.outputs.image_ref }}"
+          fi
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
@@ -125,6 +122,6 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ steps.meta.outputs.image_ref }}
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
