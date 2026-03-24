@@ -1,3 +1,5 @@
+# nosemgrep: yaml.kubernetes.security.run-as-non-root.run-as-non-root
+# This file defines a Kyverno ClusterPolicy, not a Pod manifest.
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
