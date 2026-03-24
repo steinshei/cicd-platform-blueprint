@@ -48,10 +48,16 @@ jobs:
           git add gitops/environments/dev/sample-service-values.yaml
           if git diff --cached --quiet; then
             echo "No GitOps changes to commit"
+            echo "gitops_push_status=no_change" >> "$GITHUB_ENV"
             exit 0
           fi
           git commit -m "deploy(dev): sample-service ${GITHUB_SHA}"
-          git push
+          if git push; then
+            echo "gitops_push_status=success" >> "$GITHUB_ENV"
+          else
+            echo "::warning::GitOps push was blocked (likely by branch protection)."
+            echo "gitops_push_status=blocked" >> "$GITHUB_ENV"
+          fi
 
       - name: Append deployment audit summary
         run: |
@@ -62,6 +68,7 @@ jobs:
           - image_tag: ${GITHUB_SHA}
           - actor: ${GITHUB_ACTOR}
           - workflow_run_id: ${GITHUB_RUN_ID}
+          - gitops_push_status: ${gitops_push_status:-unknown}
           EOT
 
       - name: Emit DORA deployment event
