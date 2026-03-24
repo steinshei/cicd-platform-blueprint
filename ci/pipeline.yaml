@@ -16,6 +16,11 @@ on:
         required: false
         type: boolean
         default: true
+    secrets:
+      cosign_private_key:
+        required: false
+      cosign_password:
+        required: false
 permissions:
   contents: read
   id-token: write
