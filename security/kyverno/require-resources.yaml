@@ -24,3 +24,5 @@ spec:
                   limits:
                     cpu: "?*"
                     memory: "?*"
+                securityContext:
+                  runAsNonRoot: true
