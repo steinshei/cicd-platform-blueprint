@@ -47,7 +47,7 @@ platform-cicd/
   - `v1`（主版本通道）
   - `v1.0.0`（不可变发布）
 - 业务仓库引用方式建议：
-  - `uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1`
+  - `uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.1`
 
 ## 业务仓库接入契约
 每个业务仓库至少提供：

@@ -1,4 +1,6 @@
-# 可重用的 CI 工作流，构建、测试、扫描和签名容器镜像
+# Deprecated: 业务仓不再直接使用此重型流程。
+# 当前请通过 .github/workflows/ci-main.yaml 调用平台仓
+# steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.1
 name: reusable-ci
 
 on:

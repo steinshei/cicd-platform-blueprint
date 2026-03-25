@@ -1,0 +1,16 @@
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  name: platform-namespace-exception
+  namespace: kyverno
+spec:
+  match:
+    any:
+      - resources:
+          namespaces:
+            - argocd
+            - kyverno
+  exceptions:
+    - policyName: require-resource-requests-limits
+      ruleNames:
+        - validate-resources

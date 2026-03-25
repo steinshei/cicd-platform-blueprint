@@ -1,77 +1,87 @@
-# 中小企业 CI/CD 平台蓝图（GitHub + Kubernetes + GitOps）
+# 中小企业 CI/CD 平台蓝图（单业务仓接入企业多仓架构）
 
-这个仓库用于快速搭建一套适合中小规模企业的生产级 CI/CD 平台基础设施。
+本仓库是业务仓样板，CI/CD 核心能力由平台仓提供并版本化复用：`steinshei/platform-cicd@v1.1`。
 
-## 包含内容
+## 当前落地策略
 
-- 基于 GitHub Actions 的 CI：测试 / 构建 / 扫描 / SBOM / 签名 / 产物证明（attestation）
-- 基于 Argo CD 的 GitOps 部署模型
-- 基于 Argo Rollouts 的渐进发布（5% -> 20% -> 50% -> 100%）
-- 环境晋级策略（仅允许 `staging` -> `prod`）
-- 基于 Kyverno 的策略治理基线
-- DORA 指标事件采集脚本与事件结构定义
-- OpenTofu 基础骨架（基础设施与 CI 身份）
-- 服务接入模板与运维 Runbook
+- `dev`：自动推进（自动创建并自动合并 `deploy(dev)` PR）
+- `staging/prod`：必须审批，生产由人工合并
+- 业务仓仅保留轻量入口 workflow，重逻辑统一放平台仓
 
-## 仓库结构
+## 当前包含能力
 
-- `.github/workflows`：CI/CD 工作流
-- `ci/`：可复用 CI 流水线模板
-- `deploy/helm/sample-service`：示例 Helm 部署模板
-- `gitops/`：按环境划分的期望状态
-- `security/kyverno`：准入策略基线
-- `dora/`：事件结构与采集脚本
-- `runbooks/`：运维与故障处理手册
-- `iac/opentofu`：基础设施骨架
-- `apps/sample-service`：用于打通链路的最小示例服务
+- 基于 GitHub Actions + 平台仓复用 workflow 的 CI/CD
+- GitOps 部署（Argo CD）与晋级策略（staging -> prod）
+- 渐进发布模板（Argo Rollouts 5% -> 20% -> 50% -> 100%）
+- Kyverno 基线策略（禁用 latest、资源约束、签名校验）
+- DORA 事件采集、Artifact 汇总、每周报表工作流
+- OpenTofu 基础骨架与运维 Runbook
 
-## 分支模型
+## 业务仓必备设置
 
-- `main`
-- `release/*`
-- `hotfix/*`
+1. 创建 Environments：`dev`、`staging`、`prod`
+2. `staging` 和 `prod` 配置必需审批人
+3. 配置可选 secrets：`COSIGN_PRIVATE_KEY`、`COSIGN_PASSWORD`（未配置走 keyless）
+4. 配置 `CI_BOT_TOKEN`（用于 `deploy(dev)` PR 自动合并）
+5. 执行仓库基线脚本：
 
-## 仓库必备设置
+```bash
+export GITHUB_TOKEN='<repo-admin-token>'
+./scripts/setup_github_repo.sh <owner> <repo>
+```
 
-1. 在 GitHub 中创建 Environments：`dev`、`staging`、`prod`
-2. 为 `staging` 和 `prod` 环境配置必需审批人
-3. 配置环境密钥：
-   - 可选：`COSIGN_PRIVATE_KEY`、`COSIGN_PASSWORD`（未配置时默认使用基于 OIDC 的无密钥签名）
-4. 开启 OIDC，并确保 Actions 具备读写权限
+## 必需检查名（分支保护）
+
+- `pipeline / validate-build-scan`
+- `security / semgrep`
+- `security / codeql (actions, none)`
+- `security / codeql (go, autobuild)`
 
 ## 标准发布链路
 
-1. 向 `main` 提交 PR，触发 CI（测试、构建、扫描）
-2. 合并到 `main` 后，构建并推送镜像，同时生成签名和 SBOM
-3. 工作流自动更新 `gitops/environments/dev` 中的镜像 tag
-4. 工作流自动创建 GitOps PR（更新 `gitops/environments/dev` 的镜像 tag）
-5. 合并该 GitOps PR 后，Argo CD 自动同步并部署到 `dev`
-6. 通过 promotion 工作流晋级到 `staging`，再晋级到 `prod`（带人工审批）
+1. 开发提交到功能分支并发起到 `main` 的 PR
+2. PR 通过后合并到 `main`，触发平台 CI（构建/测试/扫描/SBOM/签名）
+3. 自动创建 `deploy(dev)` PR 并自动合并
+4. Argo CD 同步 `dev`
+5. 手动触发 `promote` workflow 晋级到 `staging`，再创建 `prod` PR（人工合并）
 
-## 快速开始
+## DORA 周报
+
+- 工作流：`.github/workflows/dora-weekly-report.yaml`
+- 频率：每周一 UTC 02:00（可手动触发）
+- 输出：`weekly-report.json` + `weekly-report.md`（Artifact）
+- 指标：Lead Time、Deployment Frequency、MTTR、Change Failure Rate
+
+## 新服务接入（MVP）
 
 ```bash
-git init
-# 提交本仓库并推送到 GitHub
-# 配置 GitHub Environments 和 secrets
+./scripts/onboard_service.sh <service-name> [owner-email] [tier] [runbook-path]
 ```
 
-之后你可以在 `apps/sample-service` 做一次改动，合并到 `main`，再按流程晋级各环境。
+脚本会生成：
 
-## 集群侧引导命令（Bootstrap）
+- `apps/<service>/` 最小服务骨架
+- `.github/workflows/<service>-ci.yaml` 轻量入口 workflow（引用 `platform-cicd@v1.1`）
+- `gitops/environments/{dev,staging,prod}/<service>-values.yaml`
+- `service-catalog/<service>.yaml`
+
+## 集群侧引导（Argo + Kyverno）
 
 ```bash
-# 1）安装 Argo CD 和 Argo Rollouts（按你的集群工具链调整）
 kubectl create namespace argocd
-
-# 2）应用 Project 和 Application
 kubectl apply -f gitops/bootstrap/argocd-project.yaml
 kubectl apply -f gitops/bootstrap/sample-service-dev-app.yaml
 kubectl apply -f gitops/bootstrap/sample-service-staging-app.yaml
 kubectl apply -f gitops/bootstrap/sample-service-prod-app.yaml
 
-# 3）安装 Kyverno 后，应用策略基线
 kubectl apply -f security/kyverno/disallow-latest-tag.yaml
 kubectl apply -f security/kyverno/require-resources.yaml
 kubectl apply -f security/kyverno/verify-image-signature.yaml
+kubectl apply -f security/kyverno/platform-namespace-exception.yaml
 ```
+
+更多操作见：
+
+- `runbooks/operations.md`
+- `runbooks/incidents.md`
+- `docs/BUSINESS_REPO_STANDARD_CHECKLIST.md`

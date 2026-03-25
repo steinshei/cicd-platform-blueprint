@@ -6,7 +6,7 @@
 直接替换工作流程可能会在所需检查名称发生变化时导致合并操作受阻。
 此次部署首先会让旧流程和新流程并行运行：
 - 现有流程：`security-sast`（当前所需检查项）
-- 新流程：`security-sast-platform`（源自 `platform-cicd@v1`）
+- 新流程：`security-sast-platform`（源自 `platform-cicd@v1.1`）
 
 ## 推广步骤
 - 1. 合并此分支。

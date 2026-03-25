@@ -1,4 +1,3 @@
-# 该工作流用于手动触发从 staging 到 prod 的镜像版本提升，包含必要的审批流程和 DORA 事件收集。
 name: promote
 
 on:
@@ -17,106 +16,41 @@ permissions:
   pull-requests: write
 
 jobs:
-  promote-staging:
+  promote:
+    uses: steinshei/platform-cicd/.github/workflows/reusable-promote.yml@v1.1
+    with:
+      service: ${{ github.event.inputs.service }}
+      image_tag: ${{ github.event.inputs.image_tag }}
+      staging_values_file: gitops/environments/staging/${{ github.event.inputs.service }}-values.yaml
+      prod_values_file: gitops/environments/prod/${{ github.event.inputs.service }}-values.yaml
+    secrets: inherit
+
+  emit-dora-staging:
+    needs: [promote]
     runs-on: ubuntu-latest
-    environment: staging
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Update staging
-        env:
-          SERVICE: ${{ github.event.inputs.service }}
-          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+      - name: Emit staging DORA event
         run: |
-          set -euo pipefail
-          FILE="gitops/environments/staging/${SERVICE}-values.yaml"
-          sed -i.bak -E "s|^  tag: .*|  tag: ${IMAGE_TAG}|" "$FILE"
-          rm -f "$FILE.bak"
-
-      - name: Commit staging
-        env:
-          SERVICE: ${{ github.event.inputs.service }}
-          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "gitops/environments/staging/${SERVICE}-values.yaml"
-          git commit -m "promote(staging): ${SERVICE} ${IMAGE_TAG}"
-          git push
-
-      - name: DORA staging event
-        env:
-          SERVICE: ${{ github.event.inputs.service }}
-          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
-        run: |
-          ./scripts/collect_dora_event.sh deployment staging "${SERVICE}" "${IMAGE_TAG}" "success"
-
-  promote-prod:
-    runs-on: ubuntu-latest
-    needs: [promote-staging]
-    environment: prod
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Policy gate (staging -> prod only)
-        env:
-          SERVICE: ${{ github.event.inputs.service }}
-          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
-        run: |
-          set -euo pipefail
-          STAGING_TAG="$(awk '/^  tag:/ {print $2}' "gitops/environments/staging/${SERVICE}-values.yaml")"
-          if [ "$STAGING_TAG" != "${IMAGE_TAG}" ]; then
-            echo "Promotion denied: requested tag must already exist in staging"
-            exit 1
-          fi
-
-      - name: Update prod
-        env:
-          SERVICE: ${{ github.event.inputs.service }}
-          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
-        run: |
-          set -euo pipefail
-          FILE="gitops/environments/prod/${SERVICE}-values.yaml"
-          sed -i.bak -E "s|^  tag: .*|  tag: ${IMAGE_TAG}|" "$FILE"
-          rm -f "$FILE.bak"
-
-      - name: Create prod promotion PR (manual merge required)
-        id: prod_pr
-        uses: peter-evans/create-pull-request@v7
+          ./scripts/collect_dora_event.sh deployment staging "${{ github.event.inputs.service }}" "${{ github.event.inputs.image_tag }}" "success"
+      - name: Upload staging DORA event artifact
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "promote(prod): ${{ github.event.inputs.service }} ${{ github.event.inputs.image_tag }}"
-          branch: "promote/prod-${{ github.event.inputs.service }}-${{ github.run_id }}"
-          delete-branch: true
-          title: "promote(prod): ${{ github.event.inputs.service }} ${{ github.event.inputs.image_tag }}"
-          body: |
-            Automated prod promotion PR.
-            - service: `${{ github.event.inputs.service }}`
-            - image_tag: `${{ github.event.inputs.image_tag }}`
-            - source_run: `${{ github.run_id }}`
+          name: dora-event-staging-${{ github.run_id }}
+          path: dora/events/*.json
 
-            Manual review and merge are required for production.
-          labels: |
-            prod
-            manual-approval-required
-          add-paths: |
-            gitops/environments/prod/${{ github.event.inputs.service }}-values.yaml
-
-      - name: Append prod promotion summary
+  emit-dora-prod:
+    needs: [promote]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Emit prod DORA event
         run: |
-          cat >> "$GITHUB_STEP_SUMMARY" <<EOT
-          ### Prod Promotion
-          - strategy: manual merge required
-          - pr_number: ${{ steps.prod_pr.outputs.pull-request-number || 'n/a' }}
-          - pr_operation: ${{ steps.prod_pr.outputs.pull-request-operation || 'none' }}
-          EOT
-
-      - name: DORA prod event
-        env:
-          SERVICE: ${{ github.event.inputs.service }}
-          IMAGE_TAG: ${{ github.event.inputs.image_tag }}
-        run: |
-          ./scripts/collect_dora_event.sh deployment prod "${SERVICE}" "${IMAGE_TAG}" "pending_approval"
+          ./scripts/collect_dora_event.sh deployment prod "${{ github.event.inputs.service }}" "${{ github.event.inputs.image_tag }}" "pending_approval"
+      - name: Upload prod DORA event artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dora-event-prod-${{ github.run_id }}
+          path: dora/events/*.json

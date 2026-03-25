@@ -43,13 +43,20 @@
       "enum": [
         "success",
         "failed",
-        "partial"
+        "partial",
+        "pending_approval"
       ]
     },
     "actor": {
       "type": "string"
     },
     "run_id": {
+      "type": "string"
+    },
+    "repository": {
+      "type": "string"
+    },
+    "run_url": {
       "type": "string"
     }
   }
