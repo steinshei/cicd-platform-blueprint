@@ -3,7 +3,7 @@ namespace: sample-service
 
 image:
   repository: ghcr.io/your-org/sample-service
-  tag: latest
+  tag: bootstrap-dev
   pullPolicy: IfNotPresent
 
 service:
@@ -22,12 +22,21 @@ rollout:
   replicas: 4
   steps:
     - setWeight: 5
+    - analysis:
+        templates:
+          - templateName: sample-service-success-rate
     - pause:
         duration: 60s
     - setWeight: 20
+    - analysis:
+        templates:
+          - templateName: sample-service-success-rate
     - pause:
         duration: 120s
     - setWeight: 50
+    - analysis:
+        templates:
+          - templateName: sample-service-success-rate
     - pause:
         duration: 180s
     - setWeight: 100

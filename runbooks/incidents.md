@@ -16,9 +16,10 @@
 ## Data sources
 
 - GitHub workflow run logs
+- GitHub Action artifacts (`dora-event-*`, `dora-weekly-report-*`)
 - Argo CD app history
 - Kubernetes events and pod logs
-- DORA deployment events (`dora/events/*.json`)
+- DORA deployment events (`dora/events/*.json`, downloaded into `dora/weekly-input/`)
 
 ## Postmortem requirements
 

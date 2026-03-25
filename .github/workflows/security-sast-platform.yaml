@@ -13,6 +13,6 @@ permissions:
 
 jobs:
   security:
-    uses: steinshei/platform-cicd/.github/workflows/reusable-security-sast.yml@v1
+    uses: steinshei/platform-cicd/.github/workflows/reusable-security-sast.yml@v1.1
     with:
       run_semgrep: true

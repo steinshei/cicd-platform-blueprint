@@ -1,0 +1,49 @@
+name: dora-weekly-report
+
+on:
+  schedule:
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: Window in days
+        required: false
+        default: "7"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      WINDOW_DAYS: ${{ github.event.inputs.days || '7' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download DORA event artifacts
+        run: |
+          chmod +x ./scripts/download_dora_artifacts.sh
+          ./scripts/download_dora_artifacts.sh "${WINDOW_DAYS}" "dora/weekly-input"
+
+      - name: Generate weekly report
+        run: |
+          python3 ./scripts/generate_dora_weekly_report.py \
+            --events-dir dora/weekly-input \
+            --days "${WINDOW_DAYS}" \
+            --out-json dora/reports/weekly-report.json \
+            --out-md dora/reports/weekly-report.md
+
+      - name: Upload weekly report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dora-weekly-report-${{ github.run_id }}
+          path: |
+            dora/reports/weekly-report.json
+            dora/reports/weekly-report.md
+
+      - name: Append summary
+        run: cat dora/reports/weekly-report.md >> "$GITHUB_STEP_SUMMARY"

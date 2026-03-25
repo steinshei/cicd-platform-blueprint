@@ -1,4 +1,3 @@
-# 此脚本会收集 DORA 事件，并将其保存为 JSON 文件至“dora/events”目录中。
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -16,9 +15,12 @@ status="$5"
 timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 actor="${GITHUB_ACTOR:-local-user}"
 run_id="${GITHUB_RUN_ID:-local-run}"
+repo="${GITHUB_REPOSITORY:-local/local}"
+run_url="${GITHUB_SERVER_URL:-https://github.com}/${repo}/actions/runs/${run_id}"
+output_dir="${DORA_OUTPUT_DIR:-dora/events}"
 
-mkdir -p dora/events
-outfile="dora/events/${timestamp//:/-}-${event_type}-${environment}-${service}.json"
+mkdir -p "${output_dir}"
+outfile="${output_dir}/${timestamp//:/-}-${event_type}-${environment}-${service}.json"
 
 cat > "$outfile" <<JSON
 {
@@ -29,7 +31,9 @@ cat > "$outfile" <<JSON
   "version": "${version}",
   "status": "${status}",
   "actor": "${actor}",
-  "run_id": "${run_id}"
+  "run_id": "${run_id}",
+  "repository": "${repo}",
+  "run_url": "${run_url}"
 }
 JSON
 

@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   pipeline:
-    uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1
+    uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.1
     with:
       service_name: sample-service
       context_dir: apps/sample-service
@@ -29,7 +29,7 @@ jobs:
   update-dev-gitops:
     needs: [pipeline]
     if: github.event_name == 'push'
-    uses: steinshei/platform-cicd/.github/workflows/reusable-deploy-dev.yml@v1
+    uses: steinshei/platform-cicd/.github/workflows/reusable-deploy-dev.yml@v1.1
     with:
       service_name: sample-service
       values_file: gitops/environments/dev/sample-service-values.yaml
@@ -48,3 +48,8 @@ jobs:
       - name: Emit DORA deployment event
         run: |
           ./scripts/collect_dora_event.sh deployment dev sample-service "${GITHUB_SHA}" "success"
+      - name: Upload DORA event artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dora-event-dev-${{ github.run_id }}
+          path: dora/events/*.json

@@ -7,7 +7,7 @@
 - `.github/workflows/platform-ci-poc.yaml`
   - 手动触发（`workflow_dispatch`）
   - 通过仓库引用调用可复用 workflow：
-    - `uses: steinshei/cicd-platform-blueprint/.github/workflows/reusable-ci.yml@main`
+    - `uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.1`
 
 ## 为什么该 PoC 是安全的
 - 不会替换现有 `ci-main` 或 `security-sast`
@@ -24,7 +24,7 @@
 1. 创建组织级平台仓（例如 `org/platform-cicd`）。
 2. 将共享可复用 workflow 迁移到平台仓，并用标签管理版本（`v1`、`v1.1`）。
 3. 每个业务仓仅保留轻量入口 workflow：
-   - `uses: org/platform-cicd/.github/workflows/reusable-ci.yml@v1`
+   - `uses: org/platform-cicd/.github/workflows/reusable-ci.yml@v1.1`
 4. 在组织层统一执行规则集和必需检查。
 5. 先小范围试点（3-5 仓），再规模化推广。
 
