@@ -18,17 +18,19 @@ jobs:
     strategy:
       matrix:
         include:
-          - language: [go]
+          - language: go
             build-mode: none
-          - language: [actions]
-            build-mode: none  
+          - language: actions
+            build-mode: none
     steps:
       - uses: actions/checkout@v4
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
       - name: Autobuild
+        if: matrix.build-mode == 'autobuild'
         uses: github/codeql-action/autobuild@v3
         # 执行分析并上传结果
       - name: Perform CodeQL Analysis
