@@ -6,7 +6,7 @@
 
 - [ ] `ci-main` 使用 `reusable-ci.yml@v1.1`
 - [ ] `security-sast-platform` 使用 `reusable-security-sast.yml@v1.1`
-- [ ] `ci-main` 中 `update-dev-gitops` 使用 `reusable-deploy-dev.yml@v1.1`
+- [ ] `ci-main` 中 `update-dev-gitops` 使用 direct commit 更新 dev values（不创建 bot 分支）
 - [ ] `promote` 使用 `reusable-promote.yml@v1.1`
 - [ ] 禁止引用 `@main`
 
@@ -26,13 +26,12 @@
   - `security / codeql (go, autobuild)`
 - [ ] Environments 已创建：`dev` / `staging` / `prod`
 - [ ] `staging` / `prod` 已配置 required reviewers
-- [ ] `CI_BOT_TOKEN` 已配置（用于 dev PR 自动合并）
 
 ## 3. 发布行为
 
-- [ ] `dev` 走自动推进（deploy PR 自动合并）
+- [ ] `dev` 走自动推进（develop 直接提交 GitOps dev values）
 - [ ] `staging/prod` 必须审批后手动合并
-- [ ] 不存在 deploy(dev) 循环 PR
+- [ ] 不存在 deploy(dev) 循环提交
 - [ ] 有回滚路径并在 runbook 中可执行
 
 ## 4. DORA 与审计
