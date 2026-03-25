@@ -13,7 +13,7 @@
   - develop -> release/*
   - release/* -> main
   - hotfix/* -> main (and back-merge to develop)
-- Dev: auto promotion via `deploy(dev)` PR auto-merge.
+- Dev: auto promotion via `deploy(dev)` PR auto-merge on `develop` push.
 - Staging/Prod: manual approval and manual merge are mandatory.
 - Required checks on `main`:
   - `pipeline / validate-build-scan`

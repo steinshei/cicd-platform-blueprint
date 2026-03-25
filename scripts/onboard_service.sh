@@ -151,7 +151,7 @@ jobs:
 
   update-dev-gitops:
     needs: [pipeline]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'deploy(dev):')
     uses: steinshei/platform-cicd/.github/workflows/reusable-deploy-dev.yml@v1.1
     with:
       service_name: ${service}
