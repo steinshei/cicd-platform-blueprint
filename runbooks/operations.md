@@ -45,6 +45,10 @@ kubectl argo rollouts undo rollout/sample-service -n sample-service
 
 Each drill should verify recovery in under 5 minutes for production-critical services.
 
+Execution references:
+- `docs/CLUSTER_PHASE2_PLAYBOOK.md`
+- `docs/CLUSTER_PHASE2_COMMAND_CHECKLIST.md`
+- `runbooks/drill-record-template.md`
 ## DORA weekly report
 
 - Workflow: `dora-weekly-report`
