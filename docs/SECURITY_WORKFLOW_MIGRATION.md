@@ -1,20 +1,19 @@
-# Security Workflow Migration (Parallel Mode)
+# 安全工作流程迁移（并行模式）
 
-## Why Parallel Mode
-Current branch protection likely requires existing check names from `security-sast`.
-Directly replacing workflow can block merges if required check names change.
+## 为何采用并行模式
 
-This rollout keeps old and new workflows running together first:
-- Existing: `security-sast` (current required checks)
-- New: `security-sast-platform` (from `platform-cicd@v1`)
+当前的分支保护机制可能需要从 `security-sast` 中获取现有的检查名称。
+直接替换工作流程可能会在所需检查名称发生变化时导致合并操作受阻。
+此次部署首先会让旧流程和新流程并行运行：
+- 现有流程：`security-sast`（当前所需检查项）
+- 新流程：`security-sast-platform`（源自 `platform-cicd@v1`）
 
-## Rollout Steps
-1. Merge this branch.
-2. Run 3-5 PRs and verify both old/new security workflows are stable.
-3. In branch protection, switch required checks to platform-based names.
-4. Remove old `.github/workflows/security-sast.yaml` in a follow-up PR.
+## 推广步骤
+- 1. 合并此分支。
+- 2. 执行 3 至 5 个 PR（拉取请求），并验证旧版/新版的安全工作流程是否稳定。
+- 3. 在分支保护中，需要将开关的名称改为基于平台的名称。
+- 4. 在后续的拉取请求中删除旧的“.github/workflows/security-sast.yaml”文件。
 
-## Acceptance
-- `security-sast-platform` is green on PR and main push.
-- No false failure increase vs current `security-sast`.
-- Required checks updated successfully without blocking merges.
+## 验收
+- `security-sast-platform` 在 PR 和主推送中均为绿色状态。
+- 与当前的 `security-sast` 相比，未出现错误失败情况的增加。
