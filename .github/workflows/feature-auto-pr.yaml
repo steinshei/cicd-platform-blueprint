@@ -6,7 +6,7 @@ on:
       - "feature/**"
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -17,6 +17,8 @@ jobs:
       !startsWith(github.ref_name, 'release/') &&
       !startsWith(github.ref_name, 'hotfix/')
     runs-on: ubuntu-latest
+    env:
+      PR_TOKEN: ${{ secrets.CI_BOT_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - name: Resolve branch context
         id: ctx
@@ -29,7 +31,7 @@ jobs:
       - name: Find existing PR from feature branch to develop
         id: find_pr
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ env.PR_TOKEN }}
           REPO: ${{ steps.ctx.outputs.repo }}
           OWNER: ${{ steps.ctx.outputs.owner }}
           BRANCH: ${{ steps.ctx.outputs.branch }}
@@ -43,7 +45,7 @@ jobs:
         id: create_pr
         if: steps.find_pr.outputs.pr_number == ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ env.PR_TOKEN }}
           REPO: ${{ steps.ctx.outputs.repo }}
           BRANCH: ${{ steps.ctx.outputs.branch }}
           SHA: ${{ github.sha }}
@@ -82,7 +84,7 @@ jobs:
 
       - name: Add labels
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ env.PR_TOKEN }}
           REPO: ${{ steps.ctx.outputs.repo }}
           PR: ${{ steps.pr.outputs.number }}
         run: |
@@ -96,7 +98,7 @@ jobs:
       - name: Request reviewers from repo variable
         if: vars.AUTO_PR_REVIEWERS != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ env.PR_TOKEN }}
           REPO: ${{ steps.ctx.outputs.repo }}
           PR: ${{ steps.pr.outputs.number }}
           REVIEWERS: ${{ vars.AUTO_PR_REVIEWERS }}
@@ -110,9 +112,8 @@ jobs:
             -d "{\"reviewers\": ${reviewers_json}}" >/dev/null || true
 
       - name: Enable auto-merge (squash)
-        continue-on-error: true
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ env.PR_TOKEN }}
           pull-request-number: ${{ steps.pr.outputs.number }}
           merge-method: squash
