@@ -121,12 +121,12 @@ name: ${service}-ci
 
 on:
   pull_request:
-    branches: [main]
+    branches: [develop]
     paths:
       - apps/${service}/**
       - gitops/environments/dev/${service}-values.yaml
   push:
-    branches: [main]
+    branches: [develop]
     paths:
       - apps/${service}/**
       - gitops/environments/dev/${service}-values.yaml

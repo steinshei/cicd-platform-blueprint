@@ -1,0 +1,24 @@
+name: pr-guard
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  main-source-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Allow only release/* or hotfix/* into main
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          if [[ "${HEAD_REF}" == release/* || "${HEAD_REF}" == hotfix/* ]]; then
+            echo "Allowed PR source branch for main: ${HEAD_REF}"
+            exit 0
+          fi
+          echo "Blocked: main only accepts PRs from release/* or hotfix/* branches. Current source: ${HEAD_REF}"
+          exit 1

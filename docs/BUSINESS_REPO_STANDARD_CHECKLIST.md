@@ -12,7 +12,14 @@
 
 ## 2. 分支保护与环境
 
+- [ ] 分支模型已启用：`feature/* -> develop -> release/* -> main`
 - [ ] main 保护开启，要求必须通过以下检查：
+  - `pipeline / validate-build-scan`
+  - `security / semgrep`
+  - `security / codeql (actions, none)`
+  - `security / codeql (go, autobuild)`
+  - `pr-guard / main-source-guard`
+- [ ] develop 保护开启，要求必须通过以下检查：
   - `pipeline / validate-build-scan`
   - `security / semgrep`
   - `security / codeql (actions, none)`
