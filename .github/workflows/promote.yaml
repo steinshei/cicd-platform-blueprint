@@ -28,12 +28,15 @@ jobs:
   emit-dora-staging:
     needs: [promote]
     runs-on: ubuntu-latest
+    env:
+      SERVICE: ${{ github.event.inputs.service }}
+      IMAGE_TAG: ${{ github.event.inputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Emit staging DORA event
         run: |
-          ./scripts/collect_dora_event.sh deployment staging "${{ github.event.inputs.service }}" "${{ github.event.inputs.image_tag }}" "success"
+          ./scripts/collect_dora_event.sh deployment staging "${SERVICE}" "${IMAGE_TAG}" "success"
       - name: Upload staging DORA event artifact
         uses: actions/upload-artifact@v4
         with:
@@ -43,12 +46,15 @@ jobs:
   emit-dora-prod:
     needs: [promote]
     runs-on: ubuntu-latest
+    env:
+      SERVICE: ${{ github.event.inputs.service }}
+      IMAGE_TAG: ${{ github.event.inputs.image_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Emit prod DORA event
         run: |
-          ./scripts/collect_dora_event.sh deployment prod "${{ github.event.inputs.service }}" "${{ github.event.inputs.image_tag }}" "pending_approval"
+          ./scripts/collect_dora_event.sh deployment prod "${SERVICE}" "${IMAGE_TAG}" "pending_approval"
       - name: Upload prod DORA event artifact
         uses: actions/upload-artifact@v4
         with:
