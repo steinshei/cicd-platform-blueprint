@@ -43,13 +43,22 @@ GitHub -> Settings -> Secrets and variables -> Actions：
 - 可选：`COSIGN_PRIVATE_KEY`
 - 可选：`COSIGN_PASSWORD`
 
+GitHub -> Settings -> Secrets and variables -> Actions -> Variables：
+
+- 必需：`AUTO_PR_REVIEWERS`（逗号分隔审核人用户名，例如 `alice,bob`）
+
+GitHub -> Settings -> General：
+
+- 开启：`Allow auto-merge`
+
 说明：
 - GHCR 推送默认使用 `GITHUB_TOKEN`，不再强制 `REGISTRY_USERNAME/REGISTRY_PASSWORD`。
 - 未配置 Cosign 私钥时，流水线会走 OIDC keyless 签名。
 
 ## 5. 验证
 
-- 提交 `feature/* -> develop` 的 PR：应触发 `ci-main` + `security-sast-platform`
+- `feature/*` push：应自动创建/更新到 `develop` 的 PR，并自动请求审核人
+- 审核通过 + checks 通过：PR 应自动合并到 `develop`
 - 合并到 `develop`：应自动创建并自动合并 `deploy(dev)` PR，更新 `gitops/environments/dev/sample-service-values.yaml`
 - 从 `release/*` 或 `main` 手工触发 `promote`：先过 `staging` 审批，再过 `prod` 审批
 

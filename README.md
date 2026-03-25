@@ -25,7 +25,9 @@
 3. `staging` 和 `prod` 配置必需审批人
 4. 配置可选 secrets：`COSIGN_PRIVATE_KEY`、`COSIGN_PASSWORD`（未配置走 keyless）
 5. 配置 `CI_BOT_TOKEN`（用于 `develop` 上 deploy(dev) PR 自动合并）
-6. 执行仓库基线脚本：
+6. 配置仓库变量 `AUTO_PR_REVIEWERS`（逗号分隔审核人用户名，例如 `alice,bob`）
+7. 在仓库设置中开启 `Allow auto-merge`
+8. 执行仓库基线脚本：
 
 ```bash
 export GITHUB_TOKEN='<repo-admin-token>'
@@ -49,13 +51,14 @@ export GITHUB_TOKEN='<repo-admin-token>'
 
 ## 标准发布链路
 
-1. 日常开发：`feature/* -> develop`（PR 通过后合并到 `develop`）
-2. `push develop` 触发平台 CI，并自动创建 `deploy(dev)` PR（`bot/gitops-dev-*`）
-3. `deploy(dev)` PR 自动合并后推进 `dev`
-4. 发版准备：`develop -> release/<version>`
-5. 在 `release/*` 上执行 `promote`，晋级到 `staging/prod`（带审批）
-6. 发布稳定后：`release/<version> -> main`
-7. 生产修复：`hotfix/* -> main`，随后回灌 `develop`
+1. 日常开发：`feature/*` push 后自动创建/更新到 `develop` 的 PR
+2. 自动请求审核人（来自 `AUTO_PR_REVIEWERS`），审核通过且 checks 全绿后自动合并到 `develop`
+3. `push develop` 触发平台 CI，并自动创建 `deploy(dev)` PR（`bot/gitops-dev-*`）
+4. `deploy(dev)` PR 自动合并后推进 `dev`
+5. 发版准备：`develop -> release/<version>`
+6. 在 `release/*` 上执行 `promote`，晋级到 `staging/prod`（带审批）
+7. 发布稳定后：`release/<version> -> main`
+8. 生产修复：`hotfix/* -> main`，随后回灌 `develop`
 
 ## DORA 周报
 
