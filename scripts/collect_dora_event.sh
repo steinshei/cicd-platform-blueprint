@@ -1,3 +1,4 @@
+# 此脚本会收集 DORA 事件，并将其保存为 JSON 文件至“dora/events”目录中。
 #!/usr/bin/env bash
 set -euo pipefail
 

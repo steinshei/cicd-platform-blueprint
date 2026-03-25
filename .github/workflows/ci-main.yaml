@@ -1,3 +1,5 @@
+# 该工作流用于在 pull request 和 push 到 main 分支时运行 CI 流水线，构建、测试、
+# 扫描和签名容器镜像，并在成功后自动更新 dev 环境的 GitOps 配置，包含必要的权限设置和 DORA 事件收集。
 name: ci-main
 
 on:
