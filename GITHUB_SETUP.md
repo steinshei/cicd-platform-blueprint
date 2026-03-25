@@ -23,7 +23,8 @@ export GITHUB_TOKEN='<你的token>'
 ```
 
 这个脚本会做：
-- `main` 分支保护
+- 自动创建 `develop` 分支（若不存在）
+- `main` 与 `develop` 分支保护
 - 创建 `dev` / `staging` / `prod` 三个 environment
 
 ## 3. 在 UI 补全审批人
@@ -48,11 +49,18 @@ GitHub -> Settings -> Secrets and variables -> Actions：
 
 ## 5. 验证
 
-- 提交一个 PR：应触发 `ci-main` + `security-sast-platform`
-- 合并到 `main`：应自动创建 GitOps PR，更新 `gitops/environments/dev/sample-service-values.yaml`
-- 手工触发 `promote`：先过 `staging` 审批，再过 `prod` 审批
+- 提交 `feature/* -> develop` 的 PR：应触发 `ci-main` + `security-sast-platform`
+- 合并到 `develop`：应自动创建 GitOps PR，更新 `gitops/environments/dev/sample-service-values.yaml`
+- 从 `release/*` 或 `main` 手工触发 `promote`：先过 `staging` 审批，再过 `prod` 审批
 
 main 分支推荐必需检查：
+- `pipeline / validate-build-scan`
+- `security / semgrep`
+- `security / codeql (actions, none)`
+- `security / codeql (go, autobuild)`
+- `pr-guard / main-source-guard`
+
+develop 分支推荐必需检查：
 - `pipeline / validate-build-scan`
 - `security / semgrep`
 - `security / codeql (actions, none)`

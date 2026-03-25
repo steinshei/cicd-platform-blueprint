@@ -2,9 +2,9 @@ name: security-sast-platform
 
 on:
   pull_request:
-    branches: [main]
+    branches: [develop, main, 'release/**']
   push:
-    branches: [main]
+    branches: [develop, main, 'release/**']
 
 permissions:
   actions: read

@@ -16,7 +16,21 @@ permissions:
   pull-requests: write
 
 jobs:
+  validate-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate promotion source branch
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF}" == "refs/heads/main" || "${GITHUB_REF}" == refs/heads/release/* ]]; then
+            echo "Promotion is allowed from ${GITHUB_REF}"
+            exit 0
+          fi
+          echo "Promotion is only allowed from main or release/* branches. Current: ${GITHUB_REF}"
+          exit 1
+
   promote:
+    needs: [validate-branch]
     uses: steinshei/platform-cicd/.github/workflows/reusable-promote.yml@v1.1
     with:
       service: ${{ github.event.inputs.service }}

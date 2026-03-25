@@ -8,6 +8,11 @@
 
 ## Deployment policy
 
+- Branch flow:
+  - feature/* -> develop
+  - develop -> release/*
+  - release/* -> main
+  - hotfix/* -> main (and back-merge to develop)
 - Dev: auto promotion via `deploy(dev)` PR auto-merge.
 - Staging/Prod: manual approval and manual merge are mandatory.
 - Required checks on `main`:
@@ -15,6 +20,7 @@
   - `security / semgrep`
   - `security / codeql (actions, none)`
   - `security / codeql (go, autobuild)`
+  - `pr-guard / main-source-guard`
 
 ## Deployment checks
 
@@ -49,6 +55,7 @@ Execution references:
 - `docs/CLUSTER_PHASE2_PLAYBOOK.md`
 - `docs/CLUSTER_PHASE2_COMMAND_CHECKLIST.md`
 - `runbooks/drill-record-template.md`
+
 ## DORA weekly report
 
 - Workflow: `dora-weekly-report`

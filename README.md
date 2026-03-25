@@ -7,6 +7,7 @@
 - `dev`：自动推进（自动创建并自动合并 `deploy(dev)` PR）
 - `staging/prod`：必须审批，生产由人工合并
 - 业务仓仅保留轻量入口 workflow，重逻辑统一放平台仓
+- 分支模型：`feature/* -> develop -> release/* -> main`
 
 ## 当前包含能力
 
@@ -19,11 +20,12 @@
 
 ## 业务仓必备设置
 
-1. 创建 Environments：`dev`、`staging`、`prod`
-2. `staging` 和 `prod` 配置必需审批人
-3. 配置可选 secrets：`COSIGN_PRIVATE_KEY`、`COSIGN_PASSWORD`（未配置走 keyless）
-4. 配置 `CI_BOT_TOKEN`（用于 `deploy(dev)` PR 自动合并）
-5. 执行仓库基线脚本：
+1. 创建分支：`develop`（长期开发分支）
+2. 创建 Environments：`dev`、`staging`、`prod`
+3. `staging` 和 `prod` 配置必需审批人
+4. 配置可选 secrets：`COSIGN_PRIVATE_KEY`、`COSIGN_PASSWORD`（未配置走 keyless）
+5. 配置 `CI_BOT_TOKEN`（用于 `deploy(dev)` PR 自动合并）
+6. 执行仓库基线脚本：
 
 ```bash
 export GITHUB_TOKEN='<repo-admin-token>'
@@ -32,6 +34,14 @@ export GITHUB_TOKEN='<repo-admin-token>'
 
 ## 必需检查名（分支保护）
 
+`main`：
+- `pipeline / validate-build-scan`
+- `security / semgrep`
+- `security / codeql (actions, none)`
+- `security / codeql (go, autobuild)`
+- `pr-guard / main-source-guard`
+
+`develop`：
 - `pipeline / validate-build-scan`
 - `security / semgrep`
 - `security / codeql (actions, none)`
@@ -39,11 +49,12 @@ export GITHUB_TOKEN='<repo-admin-token>'
 
 ## 标准发布链路
 
-1. 开发提交到功能分支并发起到 `main` 的 PR
-2. PR 通过后合并到 `main`，触发平台 CI（构建/测试/扫描/SBOM/签名）
-3. 自动创建 `deploy(dev)` PR 并自动合并
-4. Argo CD 同步 `dev`
-5. 手动触发 `promote` workflow 晋级到 `staging`，再创建 `prod` PR（人工合并）
+1. 日常开发：`feature/* -> develop`（PR 通过后合并到 `develop`）
+2. `push develop` 触发平台 CI，并自动推进 `dev`
+3. 发版准备：`develop -> release/<version>`
+4. 在 `release/*` 上执行 `promote`，晋级到 `staging/prod`（带审批）
+5. 发布稳定后：`release/<version> -> main`
+6. 生产修复：`hotfix/* -> main`，随后回灌 `develop`
 
 ## DORA 周报
 

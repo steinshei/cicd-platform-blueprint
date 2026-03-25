@@ -1,12 +1,12 @@
-# 该工作流用于在 pull request 和 push 到 main 分支时运行 CI 流水线，构建、测试、
-# 扫描和签名容器镜像，并在成功后自动更新 dev 环境的 GitOps 配置，包含必要的权限设置和 DORA 事件收集。
+# 该工作流用于在 pull request 和 push 到 develop/release/main 分支时运行 CI 流水线。
+# 其中仅 develop push 会自动推进 dev 环境，main 只用于稳定版本验证与审计。
 name: ci-main
 
 on:
   pull_request:
-    branches: [main]
+    branches: [develop, main, 'release/**']
   push:
-    branches: [main]
+    branches: [develop, main, 'release/**']
 
 permissions:
   contents: write
@@ -28,7 +28,7 @@ jobs:
 
   update-dev-gitops:
     needs: [pipeline]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     uses: steinshei/platform-cicd/.github/workflows/reusable-deploy-dev.yml@v1.1
     with:
       service_name: sample-service
@@ -40,7 +40,7 @@ jobs:
 
   emit-dora-dev:
     needs: [update-dev-gitops]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
