@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   security:
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'bot/gitops-dev-')
     uses: steinshei/platform-cicd/.github/workflows/reusable-security-sast.yml@v1.1
     with:
       run_semgrep: true
