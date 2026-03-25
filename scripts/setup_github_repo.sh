@@ -28,8 +28,9 @@ curl -sS -X PUT \
     "strict": true,
     "checks": [
       {"context": "pipeline / validate-build-scan"},
-      {"context": "codeql"},
-      {"context": "semgrep"}
+      {"context": "security / semgrep"},
+      {"context": "security / codeql (actions, none)"},
+      {"context": "security / codeql (go, autobuild)"}
     ]
   },
   "enforce_admins": true,
