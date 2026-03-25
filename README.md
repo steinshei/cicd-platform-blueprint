@@ -85,3 +85,5 @@ kubectl apply -f security/kyverno/platform-namespace-exception.yaml
 - `runbooks/operations.md`
 - `runbooks/incidents.md`
 - `docs/BUSINESS_REPO_STANDARD_CHECKLIST.md`
+- `docs/CLUSTER_PHASE2_PLAYBOOK.md`
+- `docs/CLUSTER_PHASE2_COMMAND_CHECKLIST.md`
