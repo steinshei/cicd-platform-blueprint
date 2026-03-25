@@ -152,14 +152,61 @@ jobs:
   update-dev-gitops:
     needs: [pipeline]
     if: github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'deploy(dev):')
-    uses: steinshei/platform-cicd/.github/workflows/reusable-deploy-dev.yml@v1.1
-    with:
-      service_name: ${service}
-      values_file: gitops/environments/dev/${service}-values.yaml
-      image_tag: \${{ github.sha }}
-      skip_if_deploy_commit: true
-    secrets:
-      ci_bot_token: \${{ secrets.CI_BOT_TOKEN }}
+    runs-on: ubuntu-latest
+    env:
+      PR_BOT_TOKEN: \${{ secrets.CI_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update dev image tag
+        run: |
+          set -euo pipefail
+          sed -i.bak -E "s|^  tag: .*|  tag: \${GITHUB_SHA}|" "gitops/environments/dev/${service}-values.yaml"
+          rm -f "gitops/environments/dev/${service}-values.yaml.bak"
+      - name: Create GitOps PR for dev update
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: \${{ env.PR_BOT_TOKEN }}
+          commit-message: "deploy(dev): ${service} \${GITHUB_SHA}"
+          branch: "bot/gitops-dev-${service}-\${{ github.run_id }}"
+          delete-branch: true
+          title: "deploy(dev): ${service} \${GITHUB_SHA}"
+          body: |
+            Automated dev GitOps update.
+            - service: ${service}
+            - image_tag: \`\${{ github.sha }}\`
+            - source_run: \`\${{ github.run_id }}\`
+          add-paths: |
+            gitops/environments/dev/${service}-values.yaml
+      - name: Enable auto-merge with clean-status fallback
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: \${{ env.PR_BOT_TOKEN }}
+          PR_NUMBER: \${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          set -euo pipefail
+          set +e
+          out="\$(gh pr merge -R "\${GITHUB_REPOSITORY}" --squash --auto "\${PR_NUMBER}" 2>&1)"
+          code=\$?
+          set -e
+          echo "\${out}"
+          if [ "\${code}" -eq 0 ]; then
+            exit 0
+          fi
+          if echo "\${out}" | grep -qi "clean status"; then
+            echo "Detected clean-status race, trying direct squash merge fallback."
+            set +e
+            out2="\$(gh pr merge -R "\${GITHUB_REPOSITORY}" --squash "\${PR_NUMBER}" 2>&1)"
+            code2=\$?
+            set -e
+            echo "\${out2}"
+            if [ "\${code2}" -eq 0 ]; then
+              exit 0
+            fi
+            echo "Fallback merge not applied; leave PR open for normal merge conditions."
+            exit 0
+          fi
+          exit "\${code}"
 EOF
 fi
 
