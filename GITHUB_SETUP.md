@@ -39,6 +39,7 @@ GitHub -> Settings -> Environments：
 
 GitHub -> Settings -> Secrets and variables -> Actions：
 
+- 必需：`CI_BOT_TOKEN`（用于 `develop` 上 `deploy(dev)` PR 自动合并）
 - 可选：`COSIGN_PRIVATE_KEY`
 - 可选：`COSIGN_PASSWORD`
 
@@ -49,7 +50,7 @@ GitHub -> Settings -> Secrets and variables -> Actions：
 ## 5. 验证
 
 - 提交 `feature/* -> develop` 的 PR：应触发 `ci-main` + `security-sast-platform`
-- 合并到 `develop`：应直接提交 `gitops/environments/dev/sample-service-values.yaml` 的新镜像 tag
+- 合并到 `develop`：应自动创建并自动合并 `deploy(dev)` PR，更新 `gitops/environments/dev/sample-service-values.yaml`
 - 从 `release/*` 或 `main` 手工触发 `promote`：先过 `staging` 审批，再过 `prod` 审批
 
 main 分支推荐必需检查：

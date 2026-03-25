@@ -133,6 +133,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
   id-token: write
   security-events: write
   attestations: write
@@ -151,27 +152,14 @@ jobs:
   update-dev-gitops:
     needs: [pipeline]
     if: github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'deploy(dev):')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update dev image tag
-        run: |
-          set -euo pipefail
-          file="gitops/environments/dev/${service}-values.yaml"
-          sed -i.bak -E "s|^  tag: .*|  tag: \${GITHUB_SHA}|" "\${file}"
-          rm -f "\${file}.bak"
-      - name: Commit and push to develop
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- gitops/environments/dev/${service}-values.yaml; then
-            echo "No dev GitOps change to commit."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add gitops/environments/dev/${service}-values.yaml
-          git commit -m "deploy(dev): ${service} \${GITHUB_SHA}"
-          git push origin HEAD:develop
+    uses: steinshei/platform-cicd/.github/workflows/reusable-deploy-dev.yml@v1.1
+    with:
+      service_name: ${service}
+      values_file: gitops/environments/dev/${service}-values.yaml
+      image_tag: \${{ github.sha }}
+      skip_if_deploy_commit: true
+    secrets:
+      ci_bot_token: \${{ secrets.CI_BOT_TOKEN }}
 EOF
 fi
 
