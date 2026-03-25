@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   pipeline:
-    uses: ./.github/workflows/reusable-ci.yml
+    uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1
     with:
       service_name: sample-service
       context_dir: apps/sample-service
@@ -27,62 +27,24 @@ jobs:
     secrets: inherit
 
   update-dev-gitops:
-    if: github.event_name == 'push' && !startsWith(github.event.head_commit.message, 'deploy(dev):')
     needs: [pipeline]
+    if: github.event_name == 'push'
+    uses: steinshei/platform-cicd/.github/workflows/reusable-deploy-dev.yml@v1
+    with:
+      service_name: sample-service
+      values_file: gitops/environments/dev/sample-service-values.yaml
+      image_tag: ${{ github.sha }}
+      skip_if_deploy_commit: true
+    secrets:
+      ci_bot_token: ${{ secrets.CI_BOT_TOKEN }}
+
+  emit-dora-dev:
+    needs: [update-dev-gitops]
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: dev
-    env:
-      PR_BOT_TOKEN: ${{ secrets.CI_BOT_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Update dev image tag
-        run: |
-          set -euo pipefail
-          IMAGE_TAG="${GITHUB_SHA}"
-          FILE="gitops/environments/dev/sample-service-values.yaml"
-          sed -i.bak -E "s|^  tag: .*|  tag: ${IMAGE_TAG}|" "$FILE"
-          rm -f "$FILE.bak"
-
-      - name: Create GitOps PR for dev update
-        id: cpr
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ env.PR_BOT_TOKEN }}
-          commit-message: "deploy(dev): sample-service ${{ github.sha }}"
-          branch: "bot/gitops-dev-sample-service-${{ github.run_id }}"
-          delete-branch: true
-          title: "deploy(dev): sample-service ${{ github.sha }}"
-          body: |
-            Automated dev GitOps update.
-            - service: sample-service
-            - image_tag: `${{ github.sha }}`
-            - source_run: `${{ github.run_id }}`
-          add-paths: |
-            gitops/environments/dev/sample-service-values.yaml
-
-      - name: Enable auto-merge for dev GitOps PR
-        if: steps.cpr.outputs.pull-request-number != ''
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          token: ${{ env.PR_BOT_TOKEN }}
-          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-          merge-method: squash
-
-      - name: Append deployment audit summary
-        run: |
-          cat >> "$GITHUB_STEP_SUMMARY" <<EOT
-          ### Deployment Audit
-          - environment: dev
-          - service: sample-service
-          - image_tag: ${GITHUB_SHA}
-          - actor: ${GITHUB_ACTOR}
-          - workflow_run_id: ${GITHUB_RUN_ID}
-          - gitops_pr_operation: ${{ steps.cpr.outputs.pull-request-operation || 'none' }}
-          - gitops_pr_number: ${{ steps.cpr.outputs.pull-request-number || 'n/a' }}
-          EOT
-
       - name: Emit DORA deployment event
         run: |
           ./scripts/collect_dora_event.sh deployment dev sample-service "${GITHUB_SHA}" "success"
