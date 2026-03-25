@@ -100,4 +100,7 @@ for env in dev staging prod; do
 done
 
 echo "GitHub baseline configured: branch protection(main/develop) + environments(dev/staging/prod)."
-echo "Next: set required reviewers for staging/prod in GitHub UI."
+echo "Next in GitHub UI:"
+echo "  1) set required reviewers for staging/prod environments"
+echo "  2) enable repository setting: Allow auto-merge"
+echo "  3) set repo variable AUTO_PR_REVIEWERS=alice,bob (comma-separated GitHub usernames)"
