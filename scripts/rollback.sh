@@ -1,3 +1,4 @@
+# 此脚本会使用 Argo Rollouts 对给定环境中的指定服务进行回滚操作。
 #!/usr/bin/env bash
 set -euo pipefail
 

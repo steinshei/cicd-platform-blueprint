@@ -1,3 +1,4 @@
+# 该工作流用于在 pull request 和 push 到 main 分支时运行安全静态应用程序安全测试（SAST），使用 CodeQL 和 Semgrep 进行代码分析和漏洞检测。
 name: security-sast
 
 on:
@@ -16,7 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        language: [go]
+        include:
+          - language: [go]
+            build-mode: none
+          - language: [actions]
+            build-mode: none  
     steps:
       - uses: actions/checkout@v4
       - name: Initialize CodeQL
@@ -25,7 +30,8 @@ jobs:
           languages: ${{ matrix.language }}
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
-      - name: Analyze
+        # 执行分析并上传结果
+      - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
   semgrep:

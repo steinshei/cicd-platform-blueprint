@@ -1,3 +1,4 @@
+# 此脚本为新项目设置了基本的 GitHub 仓库设置，包括分支保护规则和环境配置。
 #!/usr/bin/env bash
 set -euo pipefail
 

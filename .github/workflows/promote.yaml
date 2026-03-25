@@ -1,3 +1,4 @@
+# 该工作流用于手动触发从 staging 到 prod 的镜像版本提升，包含必要的审批流程和 DORA 事件收集。
 name: promote
 
 on:

@@ -1,3 +1,4 @@
+# 这是 OpenTelemetry 收集器的基本配置，它通过 gRPC 和 HTTP 接收 OTLP 数据。
 receivers:
   otlp:
     protocols:
