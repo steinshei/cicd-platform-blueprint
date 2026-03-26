@@ -58,7 +58,7 @@ GitHub -> Settings -> General：
 ## 5. 验证
 
 - `feature/*` push：应自动创建/更新到 `develop` 的 PR，并自动请求审核人
-- 审核通过 + checks 通过：PR 应自动合并到 `develop`
+- `develop` 默认不强制审批；checks 通过：PR 应自动合并到 `develop`
 - 合并到 `develop`：应自动创建并自动合并 `deploy(dev)` PR，更新 `gitops/environments/dev/sample-service-values.yaml`
 - 从 `release/*` 或 `main` 手工触发 `promote`：先过 `staging` 审批，再过 `prod` 审批
 
