@@ -1,0 +1,16 @@
+apiVersion: platform.internal/v1
+kind: ServiceCatalog
+metadata:
+  name: payments-service
+spec:
+  owner: platform@example.com
+  tier: tier-2
+  language: go
+  repository: github.com/steinshei/cicd-platform-blueprint
+  runtime:
+    type: kubernetes
+    namespace: payments-service
+  slo:
+    availability: 99.9
+    latency_p95_ms: 250
+  runbook: runbooks/operations.md
