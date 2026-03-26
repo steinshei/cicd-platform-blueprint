@@ -7,7 +7,8 @@
 - [ ] `feature-auto-pr` 工作流已启用（`feature/**` push 自动建/更新到 `develop`）
 - [ ] `ci-main` 使用 `reusable-ci.yml@v1.1`
 - [ ] `security-sast-platform` 使用 `reusable-security-sast.yml@v1.1`
-- [ ] `ci-main` 中 `update-dev-gitops` 使用 `reusable-deploy-dev.yml@v1.1`
+- [ ] `ci-main` 中 `build-multiarch-image` 已启用（`linux/amd64,linux/arm64`）
+- [ ] `ci-main` 中 `update-dev-gitops` 已启用（创建并自动合并 `bot/gitops-dev-*` PR）
 - [ ] `promote` 使用 `reusable-promote.yml@v1.1`
 - [ ] 禁止引用 `@main`
 
@@ -30,6 +31,7 @@
 - [ ] `CI_BOT_TOKEN` 已配置（用于 `develop` 上 deploy(dev) PR 自动合并）
 - [ ] `AUTO_PR_REVIEWERS` 已配置（固定审核人列表）
 - [ ] 仓库已开启 `Allow auto-merge`
+- [ ] `./scripts/verify_required_checks.sh <owner> <repo>` 校验通过
 
 ## 3. 发布行为
 

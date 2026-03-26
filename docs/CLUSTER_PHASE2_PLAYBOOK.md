@@ -12,11 +12,13 @@
 
 1. 安装 Argo Rollouts 控制器。
 2. 应用 Helm 模板中的 Rollout 资源。
-3. 确认 `deploy/helm/sample-service/values.yaml` 的 `rollout.steps` 为 5/20/50/100。
+3. 确认 `deploy/helm/sample-service/values.yaml` 的 `rollout.stepsWithoutAnalysis` 为 5/20/50/100。
+4. 如集群未提供 Prometheus，保持 `rollout.enableAnalysis=false`（默认）。
+5. 如需启用分析，设置 `rollout.enableAnalysis=true` 并配置 `rollout.prometheusAddress`。
 4. 使用以下命令观测推进：
 
 ```bash
-kubectl argo rollouts get rollout sample-service -n sample-service --watch
+kubectl argo rollouts get rollout sample-service -n sample-service-dev --watch
 ```
 
 ## 2) Kyverno 策略启用顺序

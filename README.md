@@ -34,6 +34,13 @@ export GITHUB_TOKEN='<repo-admin-token>'
 ./scripts/setup_github_repo.sh <owner> <repo>
 ```
 
+配置完成后，建议执行一次必需检查名对齐校验：
+
+```bash
+export GITHUB_TOKEN='<repo-admin-token>'
+./scripts/verify_required_checks.sh <owner> <repo>
+```
+
 ## 必需检查名（分支保护）
 
 `main`：
@@ -102,3 +109,10 @@ kubectl apply -f security/kyverno/platform-namespace-exception.yaml
 - `docs/BUSINESS_REPO_STANDARD_CHECKLIST.md`
 - `docs/CLUSTER_PHASE2_PLAYBOOK.md`
 - `docs/CLUSTER_PHASE2_COMMAND_CHECKLIST.md`
+
+## Rollout 分析兜底（无 Prometheus 环境）
+
+- 默认 `rollout.enableAnalysis=false`，用于本地/轻量集群先验证 5/20/50/100 金丝雀推进。
+- 若集群已部署 Prometheus，再设置：
+  - `rollout.enableAnalysis=true`
+  - `rollout.prometheusAddress=<你的prometheus地址>`

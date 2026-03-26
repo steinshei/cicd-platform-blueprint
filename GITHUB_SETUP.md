@@ -74,3 +74,10 @@ develop 分支推荐必需检查：
 - `security / semgrep`
 - `security / codeql (actions, none)`
 - `security / codeql (go, autobuild)`
+
+可执行校验：
+
+```bash
+export GITHUB_TOKEN='<你的token>'
+./scripts/verify_required_checks.sh steinshei cicd-platform-blueprint
+```
