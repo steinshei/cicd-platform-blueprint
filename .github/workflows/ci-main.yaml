@@ -27,8 +27,34 @@ jobs:
       run_tests: true
     secrets: inherit
 
-  update-dev-gitops:
+  build-multiarch-image:
     needs: [pipeline]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && !startsWith(github.event.head_commit.message, 'deploy(dev):')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/sample-service
+          file: apps/sample-service/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ghcr.io/${{ github.repository_owner }}/sample-service:${{ github.sha }}
+
+  update-dev-gitops:
+    needs: [pipeline, build-multiarch-image]
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && !startsWith(github.event.head_commit.message, 'deploy(dev):')
     runs-on: ubuntu-latest
     env:

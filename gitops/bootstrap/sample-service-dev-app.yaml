@@ -10,11 +10,14 @@ spec:
     targetRevision: develop
     path: deploy/helm/sample-service
     helm:
+      parameters:
+        - name: namespace
+          value: sample-service-dev
       valueFiles:
         - ../../../gitops/environments/dev/sample-service-values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: sample-service
+    namespace: sample-service-dev
   syncPolicy:
     automated:
       prune: true
