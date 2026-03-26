@@ -41,5 +41,9 @@ spec:
     canary:
       canaryService: {{ .Values.nameOverride }}-canary
       stableService: {{ .Values.nameOverride }}
+{{- $steps := .Values.rollout.stepsWithoutAnalysis }}
+{{- if .Values.rollout.enableAnalysis }}
+{{- $steps = .Values.rollout.stepsWithAnalysis }}
+{{- end }}
       steps:
-{{ toYaml .Values.rollout.steps | indent 8 }}
+{{ toYaml $steps | indent 8 }}
