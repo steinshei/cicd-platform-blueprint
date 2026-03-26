@@ -1,3 +1,4 @@
+{{- if .Values.rollout.enableAnalysis }}
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -12,8 +13,9 @@ spec:
       failureLimit: 1
       provider:
         prometheus:
-          address: http://prometheus-server.monitoring.svc.cluster.local
+          address: {{ .Values.rollout.prometheusAddress | quote }}
           query: |
             sum(rate(http_requests_total{service="{{ .Values.nameOverride }}",status!~"5.."}[1m]))
             /
             sum(rate(http_requests_total{service="{{ .Values.nameOverride }}"}[1m]))
+{{- end }}
