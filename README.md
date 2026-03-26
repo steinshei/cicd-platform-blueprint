@@ -59,7 +59,7 @@ export GITHUB_TOKEN='<repo-admin-token>'
 ## 标准发布链路
 
 1. 日常开发：`feature/*` push 后自动创建/更新到 `develop` 的 PR
-2. 自动请求审核人（来自 `AUTO_PR_REVIEWERS`），审核通过且 checks 全绿后自动合并到 `develop`
+2. 自动请求审核人（来自 `AUTO_PR_REVIEWERS`，可选）；`develop` 默认不强制审批，checks 全绿后自动合并
 3. `push develop` 触发平台 CI，并自动创建 `deploy(dev)` PR（`bot/gitops-dev-*`）
 4. `deploy(dev)` PR 自动合并后推进 `dev`
 5. 发版准备：`develop -> release/<version>`

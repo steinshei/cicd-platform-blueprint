@@ -42,6 +42,7 @@ ensure_branch() {
 protect_branch() {
   local branch="$1"
   local checks_json="$2"
+  local approving_review_count="$3"
 
   curl -sS -X PUT \
     -H "$auth_header" \
@@ -55,7 +56,7 @@ protect_branch() {
   },
   "enforce_admins": true,
   "required_pull_request_reviews": {
-    "required_approving_review_count": 1,
+    "required_approving_review_count": ${approving_review_count},
     "dismiss_stale_reviews": true,
     "require_code_owner_reviews": false,
     "require_last_push_approval": false
@@ -88,8 +89,8 @@ develop_checks='[
 ]'
 
 ensure_branch "develop"
-protect_branch "main" "$main_checks"
-protect_branch "develop" "$develop_checks"
+protect_branch "main" "$main_checks" 1
+protect_branch "develop" "$develop_checks" 0
 
 for env in dev staging prod; do
   curl -sS -X PUT \
@@ -105,3 +106,4 @@ echo "  1) set required reviewers for staging/prod environments"
 echo "  2) enable repository setting: Allow auto-merge"
 echo "  3) set repo variable AUTO_PR_REVIEWERS=alice,bob (comma-separated GitHub usernames)"
 echo "  4) run: ./scripts/verify_required_checks.sh ${owner} ${repo}"
+echo "Default branch review policy applied: main=1 approval, develop=0 approval."

@@ -26,6 +26,7 @@
   - `security / semgrep`
   - `security / codeql (actions, none)`
   - `security / codeql (go, autobuild)`
+- [ ] develop 默认审批数为 `0`（自动合并链路），main 默认审批数为 `1`
 - [ ] Environments 已创建：`dev` / `staging` / `prod`
 - [ ] `staging` / `prod` 已配置 required reviewers
 - [ ] `CI_BOT_TOKEN` 已配置（用于 `develop` 上 deploy(dev) PR 自动合并）
