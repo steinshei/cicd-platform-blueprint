@@ -37,9 +37,16 @@ check_branch() {
   local branch="$1"
   local expected="$2"
 
+  local raw
+  raw="$(curl -sS -H "${auth}" -H "${accept}" "${api}/${branch}/protection")"
+  if jq -e '.message? != null' >/dev/null <<<"${raw}"; then
+    echo "branch=${branch}"
+    echo "  result  : ERROR ($(jq -r '.message' <<<"${raw}"))"
+    return 1
+  fi
+
   local current
-  current="$(curl -sS -H "${auth}" -H "${accept}" \
-    "${api}/${branch}/protection" | jq -c '[.required_status_checks.checks[].context] | sort')"
+  current="$(jq -c '(.required_status_checks.checks // [] | map(.context) | sort)' <<<"${raw}")"
 
   local want
   want="$(jq -c 'sort' <<<"${expected}")"
