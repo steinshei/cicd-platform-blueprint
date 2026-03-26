@@ -15,12 +15,13 @@ spec:
                 - Pod
       verifyImages:
         - imageReferences:
-            - "ghcr.io/your-org/*"
+            - "ghcr.io/steinshei/*"
           attestors:
             - count: 1
               entries:
                 - keys:
                     publicKeys: |-
                       -----BEGIN PUBLIC KEY-----
-                      REPLACE_WITH_COSIGN_PUBLIC_KEY
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEFJeaOzcm1wU77WSDQ0doKT1d+u4n
+AmNNV4mWjxK1I9i3Qvpm8rAMcKKCPJVJpwiQi8qGbi69/uu/6KGftDzlug==
                       -----END PUBLIC KEY-----

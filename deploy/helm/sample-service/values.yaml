@@ -2,7 +2,7 @@ nameOverride: sample-service
 namespace: sample-service
 
 image:
-  repository: ghcr.io/your-org/sample-service
+  repository: ghcr.io/steinshei/sample-service
   tag: bootstrap-dev
   pullPolicy: IfNotPresent
 
