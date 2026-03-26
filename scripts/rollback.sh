@@ -17,7 +17,8 @@ if [[ "$environment" != "dev" && "$environment" != "staging" && "$environment" !
 fi
 
 echo "Rolling back ${service} in ${environment} via Argo Rollouts"
-kubectl argo rollouts undo "rollout/${service}" -n "${service}"
+namespace="${service}-${environment}"
+kubectl argo rollouts undo "rollout/${service}" -n "${namespace}"
 
 echo "Rollback command submitted. Verify with:"
-echo "kubectl argo rollouts get rollout ${service} -n ${service}"
+echo "kubectl argo rollouts get rollout ${service} -n ${namespace}"

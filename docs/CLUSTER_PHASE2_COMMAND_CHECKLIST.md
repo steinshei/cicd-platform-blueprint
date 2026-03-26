@@ -74,57 +74,58 @@ kubectl get policyexception -A
 ## 5. 验证 Rollout 金丝雀策略
 
 ```bash
-kubectl -n sample-service get rollout
-kubectl -n sample-service get analysistemplate
-kubectl argo rollouts get rollout sample-service -n sample-service --watch
+kubectl -n sample-service-dev get rollout
+kubectl -n sample-service-dev get analysistemplate
+kubectl argo rollouts get rollout sample-service -n sample-service-dev --watch
 ```
 
 通过标准：
 - 可看到 `setWeight` 5/20/50/100 阶段推进
-- Analysis step 可执行
+- 当 `rollout.enableAnalysis=true` 时，Analysis step 可执行
+- 当 `rollout.enableAnalysis=false` 时，流程不依赖 Prometheus 也可推进
 
 ## 6. 故障演练 A：镜像仓库不可用
 
 ```bash
-kubectl -n sample-service set image rollout/sample-service sample-service=invalid.registry.local/sample-service:broken
-kubectl argo rollouts get rollout sample-service -n sample-service --watch
+kubectl -n sample-service-dev set image rollout/sample-service sample-service=invalid.registry.local/sample-service:broken
+kubectl argo rollouts get rollout sample-service -n sample-service-dev --watch
 ```
 
 恢复：
 
 ```bash
-kubectl argo rollouts undo rollout/sample-service -n sample-service
-kubectl argo rollouts get rollout sample-service -n sample-service --watch
+kubectl argo rollouts undo rollout/sample-service -n sample-service-dev
+kubectl argo rollouts get rollout sample-service -n sample-service-dev --watch
 ```
 
 ## 7. 故障演练 B：配置错误
 
 ```bash
-kubectl -n sample-service set env rollout/sample-service BROKEN_CONFIG=true
-kubectl argo rollouts get rollout sample-service -n sample-service --watch
+kubectl -n sample-service-dev set env rollout/sample-service BROKEN_CONFIG=true
+kubectl argo rollouts get rollout sample-service -n sample-service-dev --watch
 ```
 
 恢复：
 
 ```bash
-kubectl -n sample-service set env rollout/sample-service BROKEN_CONFIG-
-kubectl argo rollouts undo rollout/sample-service -n sample-service
+kubectl -n sample-service-dev set env rollout/sample-service BROKEN_CONFIG-
+kubectl argo rollouts undo rollout/sample-service -n sample-service-dev
 ```
 
 ## 8. 故障演练 C：探针失败
 
 ```bash
-kubectl -n sample-service patch rollout sample-service --type='json' \
+kubectl -n sample-service-dev patch rollout sample-service --type='json' \
   -p='[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/path","value":"/wrong-healthz"}]'
-kubectl argo rollouts get rollout sample-service -n sample-service --watch
+kubectl argo rollouts get rollout sample-service -n sample-service-dev --watch
 ```
 
 恢复：
 
 ```bash
-kubectl -n sample-service patch rollout sample-service --type='json' \
+kubectl -n sample-service-dev patch rollout sample-service --type='json' \
   -p='[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/path","value":"/healthz"}]'
-kubectl argo rollouts undo rollout/sample-service -n sample-service
+kubectl argo rollouts undo rollout/sample-service -n sample-service-dev
 ```
 
 ## 9. 演练结果留档
