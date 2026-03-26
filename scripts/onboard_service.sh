@@ -29,7 +29,7 @@ if [ ! -f "${service_dir}/go.mod" ]; then
   cat > "${service_dir}/go.mod" <<EOF
 module github.com/${repo_slug}/apps/${service}
 
-go 1.22
+go 1.26
 EOF
 fi
 
@@ -48,9 +48,7 @@ func main() {
 		_, _ = fmt.Fprint(w, "ok")
 	})
 	log.Println("listening on :8080")
-	// nosemgrep: go.lang.security.audit.net.use-tls.use-tls
-	// In-cluster service traffic is terminated by ingress/service mesh; app listens on plain HTTP internally.
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil)) // nosemgrep: go.lang.security.audit.net.use-tls.use-tls
 }
 EOF
 fi
@@ -71,7 +69,7 @@ fi
 
 if [ ! -f "${service_dir}/Dockerfile" ]; then
   cat > "${service_dir}/Dockerfile" <<'EOF'
-FROM golang:1.22-alpine AS build
+FROM golang:1.26-alpine AS build
 WORKDIR /src
 COPY . .
 RUN go build -o /out/app .

@@ -11,7 +11,5 @@ func main() {
 		_, _ = fmt.Fprint(w, "ok")
 	})
 	log.Println("listening on :8080")
-	// nosemgrep: go.lang.security.audit.net.use-tls.use-tls
-	// In-cluster service traffic is terminated by ingress/service mesh; app listens on plain HTTP internally.
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil)) // nosemgrep: go.lang.security.audit.net.use-tls.use-tls
 }
