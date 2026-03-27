@@ -72,6 +72,7 @@ export GITHUB_TOKEN='<repo-admin-token>'
 - 工作流：`.github/workflows/dora-weekly-report.yaml`
 - 频率：每周一 UTC 02:00（可手动触发）
 - 输出：`weekly-report.json` + `weekly-report.md`（Artifact）
+- 看板数据：`dora-timeseries.json` + `dora-timeseries.csv`（30 天日维度趋势）
 - 指标：Lead Time、Deployment Frequency、MTTR、Change Failure Rate
 
 ## 新服务接入（MVP）
