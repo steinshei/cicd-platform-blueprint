@@ -75,6 +75,21 @@ export GITHUB_TOKEN='<repo-admin-token>'
 - 看板数据：`dora-timeseries.json` + `dora-timeseries.csv`（30 天日维度趋势）
 - 指标：Lead Time、Deployment Frequency、MTTR、Change Failure Rate
 
+手动立即触发（推荐）：
+
+```bash
+export GITHUB_TOKEN='<repo-admin-token>'
+./scripts/run_dora_weekly_report_now.sh steinshei cicd-platform-blueprint develop 7
+```
+
+查看路径：
+- GitHub 仓库 -> `Actions` -> `dora-weekly-report` -> 选择最新 run
+- 在 run 页面 `Artifacts` 下载：
+  - `weekly-report.json`
+  - `weekly-report.md`
+  - `dora-timeseries.json`
+  - `dora-timeseries.csv`
+
 ## 新服务接入（MVP）
 
 ```bash
