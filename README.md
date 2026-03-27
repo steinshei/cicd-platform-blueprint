@@ -90,6 +90,14 @@ export GITHUB_TOKEN='<repo-admin-token>'
   - `dora-timeseries.json`
   - `dora-timeseries.csv`
 
+## DORA KPI 验收门禁
+
+- 工作流：`.github/workflows/dora-kpi-gate.yaml`
+- 默认阈值：
+  - `Change Failure Rate <= 15%`
+  - `MTTR <= 0.5h`（无 incident/restore 数据时按 `n/a` 通过）
+- 产物：`kpi-check.md`（PASS/FAIL 表格）
+
 ## 新服务接入（MVP）
 
 ```bash
