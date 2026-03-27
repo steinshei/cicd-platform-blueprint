@@ -11,7 +11,7 @@
   - `security / semgrep`
   - `security / codeql (actions, none)`
   - `security / codeql (go, autobuild)`
-  - `pr-guard / main-source-guard`
+  - `pr-guard / main-source-guard (pull_request)`
 - 要求分支与目标分支保持最新
 - 禁止强推与删除分支
 

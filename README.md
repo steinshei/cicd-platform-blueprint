@@ -48,7 +48,7 @@ export GITHUB_TOKEN='<repo-admin-token>'
 - `security / semgrep`
 - `security / codeql (actions, none)`
 - `security / codeql (go, autobuild)`
-- `pr-guard / main-source-guard`
+- `pr-guard / main-source-guard (pull_request)`
 
 `develop`：
 - `pipeline / validate-build-scan`
