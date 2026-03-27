@@ -78,7 +78,7 @@ main_checks='[
   {"context":"security / semgrep"},
   {"context":"security / codeql (actions, none)"},
   {"context":"security / codeql (go, autobuild)"},
-  {"context":"pr-guard / main-source-guard"}
+  {"context":"pr-guard / main-source-guard (pull_request)"}
 ]'
 
 develop_checks='[
