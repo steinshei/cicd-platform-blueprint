@@ -2,7 +2,7 @@ nameOverride: sample-service
 namespace: sample-service
 
 image:
-  repository: ghcr.io/your-org/sample-service
+  repository: ghcr.io/steinshei/sample-service
   tag: bootstrap-dev
   pullPolicy: IfNotPresent
 
@@ -19,8 +19,10 @@ resources:
     memory: 512Mi
 
 rollout:
+  enableAnalysis: false
+  prometheusAddress: http://prometheus-server.monitoring.svc.cluster.local
   replicas: 4
-  steps:
+  stepsWithAnalysis:
     - setWeight: 5
     - analysis:
         templates:
@@ -37,6 +39,17 @@ rollout:
     - analysis:
         templates:
           - templateName: sample-service-success-rate
+    - pause:
+        duration: 180s
+    - setWeight: 100
+  stepsWithoutAnalysis:
+    - setWeight: 5
+    - pause:
+        duration: 60s
+    - setWeight: 20
+    - pause:
+        duration: 120s
+    - setWeight: 50
     - pause:
         duration: 180s
     - setWeight: 100

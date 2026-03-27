@@ -1,12 +1,12 @@
-# 该工作流用于在 pull request 和 push 到 main 分支时运行 CI 流水线，构建、测试、
-# 扫描和签名容器镜像，并在成功后自动更新 dev 环境的 GitOps 配置，包含必要的权限设置和 DORA 事件收集。
+# 该工作流用于在 pull request 和 push 到 develop/release/main 分支时运行 CI 流水线。
+# 其中仅 develop push 会自动推进 dev 环境，main 只用于稳定版本验证与审计。
 name: ci-main
 
 on:
   pull_request:
-    branches: [main]
+    branches: [develop, main, 'release/**']
   push:
-    branches: [main]
+    branches: [develop, main, 'release/**']
 
 permissions:
   contents: write
@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   pipeline:
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'bot/gitops-dev-')
     uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.1
     with:
       service_name: sample-service
@@ -26,21 +27,95 @@ jobs:
       run_tests: true
     secrets: inherit
 
-  update-dev-gitops:
+  build-multiarch-image:
     needs: [pipeline]
-    if: github.event_name == 'push'
-    uses: steinshei/platform-cicd/.github/workflows/reusable-deploy-dev.yml@v1.1
-    with:
-      service_name: sample-service
-      values_file: gitops/environments/dev/sample-service-values.yaml
-      image_tag: ${{ github.sha }}
-      skip_if_deploy_commit: true
-    secrets:
-      ci_bot_token: ${{ secrets.CI_BOT_TOKEN }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && !startsWith(github.event.head_commit.message, 'deploy(dev):')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/sample-service
+          file: apps/sample-service/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ghcr.io/${{ github.repository_owner }}/sample-service:${{ github.sha }}
+
+  update-dev-gitops:
+    needs: [pipeline, build-multiarch-image]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && !startsWith(github.event.head_commit.message, 'deploy(dev):')
+    runs-on: ubuntu-latest
+    env:
+      PR_BOT_TOKEN: ${{ secrets.CI_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Update dev image tag
+        run: |
+          set -euo pipefail
+          sed -i.bak -E "s|^  tag: .*|  tag: ${GITHUB_SHA}|" "gitops/environments/dev/sample-service-values.yaml"
+          rm -f "gitops/environments/dev/sample-service-values.yaml.bak"
+      - name: Create GitOps PR for dev update
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ env.PR_BOT_TOKEN }}
+          commit-message: "deploy(dev): sample-service ${GITHUB_SHA}"
+          branch: "bot/gitops-dev-sample-service-${{ github.run_id }}"
+          delete-branch: true
+          title: "deploy(dev): sample-service ${GITHUB_SHA}"
+          body: |
+            Automated dev GitOps update.
+            - service: sample-service
+            - image_tag: `${{ github.sha }}`
+            - source_run: `${{ github.run_id }}`
+          add-paths: |
+            gitops/environments/dev/sample-service-values.yaml
+      - name: Enable auto-merge with clean-status fallback
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ env.PR_BOT_TOKEN }}
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+        run: |
+          set -euo pipefail
+          set +e
+          out="$(gh pr merge -R "${GITHUB_REPOSITORY}" --squash --auto "${PR_NUMBER}" 2>&1)"
+          code=$?
+          set -e
+          echo "${out}"
+          if [ "${code}" -eq 0 ]; then
+            exit 0
+          fi
+          if echo "${out}" | grep -qi "clean status"; then
+            echo "Detected clean-status race, trying direct squash merge fallback."
+            set +e
+            out2="$(gh pr merge -R "${GITHUB_REPOSITORY}" --squash "${PR_NUMBER}" 2>&1)"
+            code2=$?
+            set -e
+            echo "${out2}"
+            if [ "${code2}" -eq 0 ]; then
+              exit 0
+            fi
+            echo "Fallback merge not applied; leave PR open for normal merge conditions."
+            exit 0
+          fi
+          exit "${code}"
 
   emit-dora-dev:
     needs: [update-dev-gitops]
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

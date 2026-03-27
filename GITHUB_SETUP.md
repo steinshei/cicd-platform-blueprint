@@ -23,7 +23,8 @@ export GITHUB_TOKEN='<你的token>'
 ```
 
 这个脚本会做：
-- `main` 分支保护
+- 自动创建 `develop` 分支（若不存在）
+- `main` 与 `develop` 分支保护
 - 创建 `dev` / `staging` / `prod` 三个 environment
 
 ## 3. 在 UI 补全审批人
@@ -38,9 +39,17 @@ GitHub -> Settings -> Environments：
 
 GitHub -> Settings -> Secrets and variables -> Actions：
 
-- 必需：`CI_BOT_TOKEN`（用于 `deploy(dev)` PR 自动合并）
+- 必需：`CI_BOT_TOKEN`（用于 `develop` 上 `deploy(dev)` PR 自动合并）
 - 可选：`COSIGN_PRIVATE_KEY`
 - 可选：`COSIGN_PASSWORD`
+
+GitHub -> Settings -> Secrets and variables -> Actions -> Variables：
+
+- 必需：`AUTO_PR_REVIEWERS`（逗号分隔审核人用户名，例如 `alice,bob`）
+
+GitHub -> Settings -> General：
+
+- 开启：`Allow auto-merge`
 
 说明：
 - GHCR 推送默认使用 `GITHUB_TOKEN`，不再强制 `REGISTRY_USERNAME/REGISTRY_PASSWORD`。
@@ -48,12 +57,27 @@ GitHub -> Settings -> Secrets and variables -> Actions：
 
 ## 5. 验证
 
-- 提交一个 PR：应触发 `ci-main` + `security-sast-platform`
-- 合并到 `main`：应自动创建 GitOps PR，更新 `gitops/environments/dev/sample-service-values.yaml`
-- 手工触发 `promote`：先过 `staging` 审批，再过 `prod` 审批
+- `feature/*` push：应自动创建/更新到 `develop` 的 PR，并自动请求审核人
+- `develop` 默认不强制审批；checks 通过：PR 应自动合并到 `develop`
+- 合并到 `develop`：应自动创建并自动合并 `deploy(dev)` PR，更新 `gitops/environments/dev/sample-service-values.yaml`
+- 从 `release/*` 或 `main` 手工触发 `promote`：先过 `staging` 审批，再过 `prod` 审批
 
 main 分支推荐必需检查：
 - `pipeline / validate-build-scan`
 - `security / semgrep`
 - `security / codeql (actions, none)`
 - `security / codeql (go, autobuild)`
+- `pr-guard / main-source-guard`
+
+develop 分支推荐必需检查：
+- `pipeline / validate-build-scan`
+- `security / semgrep`
+- `security / codeql (actions, none)`
+- `security / codeql (go, autobuild)`
+
+可执行校验：
+
+```bash
+export GITHUB_TOKEN='<你的token>'
+./scripts/verify_required_checks.sh steinshei cicd-platform-blueprint
+```

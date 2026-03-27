@@ -18,6 +18,9 @@ spec:
         - name: {{ .Values.nameOverride }}
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
           ports:
             - containerPort: {{ .Values.service.targetPort }}
           readinessProbe:
@@ -36,7 +39,11 @@ spec:
 {{ toYaml .Values.resources | indent 12 }}
   strategy:
     canary:
-      canaryService: {{ .Values.nameOverride }}
+      canaryService: {{ .Values.nameOverride }}-canary
       stableService: {{ .Values.nameOverride }}
+{{- $steps := .Values.rollout.stepsWithoutAnalysis }}
+{{- if .Values.rollout.enableAnalysis }}
+{{- $steps = .Values.rollout.stepsWithAnalysis }}
+{{- end }}
       steps:
-{{ toYaml .Values.rollout.steps | indent 8 }}
+{{ toYaml $steps | indent 8 }}

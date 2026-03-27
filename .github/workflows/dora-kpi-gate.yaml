@@ -1,25 +1,35 @@
-name: dora-weekly-report
+name: dora-kpi-gate
 
 on:
-  schedule:
-    - cron: "0 2 * * 1"
   workflow_dispatch:
     inputs:
       days:
         description: Window in days
         required: false
         default: "7"
+      max_cfr:
+        description: Max Change Failure Rate (%)
+        required: false
+        default: "15"
+      max_mttr_hours:
+        description: Max MTTR in hours
+        required: false
+        default: "0.5"
+  schedule:
+    - cron: "30 2 * * 1"
 
 permissions:
   actions: read
   contents: read
 
 jobs:
-  report:
+  kpi-gate:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       WINDOW_DAYS: ${{ github.event.inputs.days || '7' }}
+      MAX_CFR: ${{ github.event.inputs.max_cfr || '15' }}
+      MAX_MTTR_HOURS: ${{ github.event.inputs.max_mttr_hours || '0.5' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,7 +39,7 @@ jobs:
           chmod +x ./scripts/download_dora_artifacts.sh
           ./scripts/download_dora_artifacts.sh "${WINDOW_DAYS}" "dora/weekly-input"
 
-      - name: Generate weekly report
+      - name: Generate weekly report json
         run: |
           python3 ./scripts/generate_dora_weekly_report.py \
             --events-dir dora/weekly-input \
@@ -37,23 +47,22 @@ jobs:
             --out-json dora/reports/weekly-report.json \
             --out-md dora/reports/weekly-report.md
 
-      - name: Generate dashboard data (30d)
+      - name: Evaluate KPI gate
         run: |
-          python3 ./scripts/generate_dora_dashboard_data.py \
-            --events-dir dora/weekly-input \
-            --days 30 \
-            --out-json dora/reports/dora-timeseries.json \
-            --out-csv dora/reports/dora-timeseries.csv
+          python3 ./scripts/check_dora_targets.py \
+            --report-json dora/reports/weekly-report.json \
+            --max-cfr "${MAX_CFR}" \
+            --max-mttr-hours "${MAX_MTTR_HOURS}" \
+            --out-md dora/reports/kpi-check.md
 
-      - name: Upload weekly report artifact
+      - name: Upload KPI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dora-weekly-report-${{ github.run_id }}
+          name: dora-kpi-gate-${{ github.run_id }}
           path: |
             dora/reports/weekly-report.json
             dora/reports/weekly-report.md
-            dora/reports/dora-timeseries.json
-            dora/reports/dora-timeseries.csv
+            dora/reports/kpi-check.md
 
       - name: Append summary
-        run: cat dora/reports/weekly-report.md >> "$GITHUB_STEP_SUMMARY"
+        run: cat dora/reports/kpi-check.md >> "$GITHUB_STEP_SUMMARY"

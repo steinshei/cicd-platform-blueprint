@@ -1,3 +1,3 @@
 image:
-  repository: ghcr.io/your-org/sample-service
-  tag: 98fcb89445811fcf6f5774a41272f4223db98363
+  repository: ghcr.io/steinshei/sample-service
+  tag: 6e5904d108d47cf99d707cb38d690cb26e9feda6

@@ -7,6 +7,7 @@
 - `dev`：自动推进（自动创建并自动合并 `deploy(dev)` PR）
 - `staging/prod`：必须审批，生产由人工合并
 - 业务仓仅保留轻量入口 workflow，重逻辑统一放平台仓
+- 分支模型：`feature/* -> develop -> release/* -> main`
 
 ## 当前包含能力
 
@@ -19,19 +20,37 @@
 
 ## 业务仓必备设置
 
-1. 创建 Environments：`dev`、`staging`、`prod`
-2. `staging` 和 `prod` 配置必需审批人
-3. 配置可选 secrets：`COSIGN_PRIVATE_KEY`、`COSIGN_PASSWORD`（未配置走 keyless）
-4. 配置 `CI_BOT_TOKEN`（用于 `deploy(dev)` PR 自动合并）
-5. 执行仓库基线脚本：
+1. 创建分支：`develop`（长期开发分支）
+2. 创建 Environments：`dev`、`staging`、`prod`
+3. `staging` 和 `prod` 配置必需审批人
+4. 配置可选 secrets：`COSIGN_PRIVATE_KEY`、`COSIGN_PASSWORD`（未配置走 keyless）
+5. 配置 `CI_BOT_TOKEN`（用于 `develop` 上 deploy(dev) PR 自动合并）
+6. 配置仓库变量 `AUTO_PR_REVIEWERS`（逗号分隔审核人用户名，例如 `alice,bob`）
+7. 在仓库设置中开启 `Allow auto-merge`
+8. 执行仓库基线脚本：
 
 ```bash
 export GITHUB_TOKEN='<repo-admin-token>'
 ./scripts/setup_github_repo.sh <owner> <repo>
 ```
 
+配置完成后，建议执行一次必需检查名对齐校验：
+
+```bash
+export GITHUB_TOKEN='<repo-admin-token>'
+./scripts/verify_required_checks.sh <owner> <repo>
+```
+
 ## 必需检查名（分支保护）
 
+`main`：
+- `pipeline / validate-build-scan`
+- `security / semgrep`
+- `security / codeql (actions, none)`
+- `security / codeql (go, autobuild)`
+- `pr-guard / main-source-guard`
+
+`develop`：
 - `pipeline / validate-build-scan`
 - `security / semgrep`
 - `security / codeql (actions, none)`
@@ -39,18 +58,45 @@ export GITHUB_TOKEN='<repo-admin-token>'
 
 ## 标准发布链路
 
-1. 开发提交到功能分支并发起到 `main` 的 PR
-2. PR 通过后合并到 `main`，触发平台 CI（构建/测试/扫描/SBOM/签名）
-3. 自动创建 `deploy(dev)` PR 并自动合并
-4. Argo CD 同步 `dev`
-5. 手动触发 `promote` workflow 晋级到 `staging`，再创建 `prod` PR（人工合并）
+1. 日常开发：`feature/*` push 后自动创建/更新到 `develop` 的 PR
+2. 自动请求审核人（来自 `AUTO_PR_REVIEWERS`，可选）；`develop` 默认不强制审批，checks 全绿后自动合并
+3. `push develop` 触发平台 CI，并自动创建 `deploy(dev)` PR（`bot/gitops-dev-*`）
+4. `deploy(dev)` PR 自动合并后推进 `dev`
+5. 发版准备：`develop -> release/<version>`
+6. 在 `release/*` 上执行 `promote`，晋级到 `staging/prod`（带审批）
+7. 发布稳定后：`release/<version> -> main`
+8. 生产修复：`hotfix/* -> main`，随后回灌 `develop`
 
 ## DORA 周报
 
 - 工作流：`.github/workflows/dora-weekly-report.yaml`
 - 频率：每周一 UTC 02:00（可手动触发）
 - 输出：`weekly-report.json` + `weekly-report.md`（Artifact）
+- 看板数据：`dora-timeseries.json` + `dora-timeseries.csv`（30 天日维度趋势）
 - 指标：Lead Time、Deployment Frequency、MTTR、Change Failure Rate
+
+手动立即触发（推荐）：
+
+```bash
+export GITHUB_TOKEN='<repo-admin-token>'
+./scripts/run_dora_weekly_report_now.sh steinshei cicd-platform-blueprint develop 7
+```
+
+查看路径：
+- GitHub 仓库 -> `Actions` -> `dora-weekly-report` -> 选择最新 run
+- 在 run 页面 `Artifacts` 下载：
+  - `weekly-report.json`
+  - `weekly-report.md`
+  - `dora-timeseries.json`
+  - `dora-timeseries.csv`
+
+## DORA KPI 验收门禁
+
+- 工作流：`.github/workflows/dora-kpi-gate.yaml`
+- 默认阈值：
+  - `Change Failure Rate <= 15%`
+  - `MTTR <= 0.5h`（无 incident/restore 数据时按 `n/a` 通过）
+- 产物：`kpi-check.md`（PASS/FAIL 表格）
 
 ## 新服务接入（MVP）
 
@@ -87,3 +133,10 @@ kubectl apply -f security/kyverno/platform-namespace-exception.yaml
 - `docs/BUSINESS_REPO_STANDARD_CHECKLIST.md`
 - `docs/CLUSTER_PHASE2_PLAYBOOK.md`
 - `docs/CLUSTER_PHASE2_COMMAND_CHECKLIST.md`
+
+## Rollout 分析兜底（无 Prometheus 环境）
+
+- 默认 `rollout.enableAnalysis=false`，用于本地/轻量集群先验证 5/20/50/100 金丝雀推进。
+- 若集群已部署 Prometheus，再设置：
+  - `rollout.enableAnalysis=true`
+  - `rollout.prometheusAddress=<你的prometheus地址>`

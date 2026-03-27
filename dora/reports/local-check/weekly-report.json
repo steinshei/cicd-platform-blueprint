@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-03-26T22:40:25.544150+00:00",
+  "window_days": 7,
+  "event_count": 13,
+  "repository": "local/local",
+  "metrics": {
+    "deployment_frequency_7d": {
+      "total_successful_deployments": 13,
+      "by_environment": {
+        "dev": 13
+      }
+    },
+    "lead_time_for_changes_hours": {
+      "average": 0.0632905982905983,
+      "sample_count": 13
+    },
+    "mttr_hours": {
+      "average": null,
+      "sample_count": 0
+    },
+    "change_failure_rate_percent": 0.0,
+    "deployment_totals": {
+      "all": 13,
+      "failed": 0,
+      "successful": 13
+    }
+  }
+}

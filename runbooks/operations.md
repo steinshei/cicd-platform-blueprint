@@ -8,13 +8,19 @@
 
 ## Deployment policy
 
-- Dev: auto promotion via `deploy(dev)` PR auto-merge.
+- Branch flow:
+  - feature/* -> develop
+  - develop -> release/*
+  - release/* -> main
+  - hotfix/* -> main (and back-merge to develop)
+- Dev: auto promotion via `deploy(dev)` PR auto-merge on `develop` push.
 - Staging/Prod: manual approval and manual merge are mandatory.
 - Required checks on `main`:
   - `pipeline / validate-build-scan`
   - `security / semgrep`
   - `security / codeql (actions, none)`
   - `security / codeql (go, autobuild)`
+  - `pr-guard / main-source-guard`
 
 ## Deployment checks
 

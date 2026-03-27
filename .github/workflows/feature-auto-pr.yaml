@@ -1,0 +1,119 @@
+name: feature-auto-pr
+
+on:
+  push:
+    branches:
+      - "feature/**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  open-or-update-pr:
+    if: |
+      startsWith(github.ref_name, 'feature/') &&
+      !startsWith(github.ref_name, 'bot/') &&
+      !startsWith(github.ref_name, 'release/') &&
+      !startsWith(github.ref_name, 'hotfix/')
+    runs-on: ubuntu-latest
+    env:
+      PR_TOKEN: ${{ secrets.CI_BOT_TOKEN || secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Resolve branch context
+        id: ctx
+        run: |
+          set -euo pipefail
+          echo "branch=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "repo=${GITHUB_REPOSITORY}" >> "$GITHUB_OUTPUT"
+          echo "owner=${GITHUB_REPOSITORY_OWNER}" >> "$GITHUB_OUTPUT"
+
+      - name: Find existing PR from feature branch to develop
+        id: find_pr
+        env:
+          GH_TOKEN: ${{ env.PR_TOKEN }}
+          REPO: ${{ steps.ctx.outputs.repo }}
+          OWNER: ${{ steps.ctx.outputs.owner }}
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/${REPO}/pulls?state=open&head=${OWNER}:${BRANCH}&base=develop&per_page=1"
+          pr_number="$(curl -sS -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" "${api}" | jq -r '.[0].number // ""')"
+          echo "pr_number=${pr_number}" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR if missing
+        id: create_pr
+        if: steps.find_pr.outputs.pr_number == ''
+        env:
+          GH_TOKEN: ${{ env.PR_TOKEN }}
+          REPO: ${{ steps.ctx.outputs.repo }}
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          payload="$(jq -n \
+            --arg title "feature: ${BRANCH}" \
+            --arg head "${BRANCH}" \
+            --arg base "develop" \
+            --arg body "Auto-created PR for feature branch.\n\n- source: \`${BRANCH}\`\n- target: \`develop\`\n- latest_sha: \`${SHA}\`\n\nThis PR will auto-merge after required approval and checks pass." \
+            '{title:$title, head:$head, base:$base, body:$body, maintainer_can_modify:true}')"
+          pr_number="$(curl -sS -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/pulls" \
+            -d "${payload}" | jq -r '.number')"
+          if [ -z "${pr_number}" ] || [ "${pr_number}" = "null" ]; then
+            echo "failed to create PR"
+            exit 1
+          fi
+          echo "pr_number=${pr_number}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve PR number
+        id: pr
+        run: |
+          set -euo pipefail
+          pr="${{ steps.find_pr.outputs.pr_number }}"
+          if [ -z "${pr}" ]; then
+            pr="${{ steps.create_pr.outputs.pr_number }}"
+          fi
+          if [ -z "${pr}" ]; then
+            echo "failed to resolve PR number"
+            exit 1
+          fi
+          echo "number=${pr}" >> "$GITHUB_OUTPUT"
+
+      - name: Add labels
+        env:
+          GH_TOKEN: ${{ env.PR_TOKEN }}
+          REPO: ${{ steps.ctx.outputs.repo }}
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          set -euo pipefail
+          curl -sS -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/issues/${PR}/labels" \
+            -d '{"labels":["auto-pr","feature"]}' >/dev/null || true
+
+      - name: Request reviewers from repo variable
+        if: vars.AUTO_PR_REVIEWERS != ''
+        env:
+          GH_TOKEN: ${{ env.PR_TOKEN }}
+          REPO: ${{ steps.ctx.outputs.repo }}
+          PR: ${{ steps.pr.outputs.number }}
+          REVIEWERS: ${{ vars.AUTO_PR_REVIEWERS }}
+        run: |
+          set -euo pipefail
+          reviewers_json="$(printf '%s' "${REVIEWERS}" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length>0))')"
+          curl -sS -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/pulls/${PR}/requested_reviewers" \
+            -d "{\"reviewers\": ${reviewers_json}}" >/dev/null || true
+
+      - name: Enable auto-merge (squash)
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ env.PR_TOKEN }}
+          pull-request-number: ${{ steps.pr.outputs.number }}
+          merge-method: squash

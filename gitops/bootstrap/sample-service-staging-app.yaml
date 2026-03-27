@@ -6,15 +6,18 @@ metadata:
 spec:
   project: platform-apps
   source:
-    repoURL: https://github.com/your-org/your-repo.git
+    repoURL: https://github.com/steinshei/cicd-platform-blueprint.git
     targetRevision: main
     path: deploy/helm/sample-service
     helm:
+      parameters:
+        - name: namespace
+          value: sample-service-staging
       valueFiles:
         - ../../../gitops/environments/staging/sample-service-values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: sample-service
+    namespace: sample-service-staging
   syncPolicy:
     automated:
       prune: true

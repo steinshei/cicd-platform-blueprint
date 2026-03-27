@@ -10,3 +10,16 @@ spec:
     - name: http
       port: {{ .Values.service.port }}
       targetPort: {{ .Values.service.targetPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.nameOverride }}-canary
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: {{ .Values.nameOverride }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
