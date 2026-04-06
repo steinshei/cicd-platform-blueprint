@@ -66,8 +66,9 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 4096
+          # android-emulator-runner invokes `sh -c` (dash on Ubuntu); pipefail is bash-only.
           script: |
-            set -euo pipefail
+            set -eu
             cd "${ANDROID_PROJECT_DIR}"
             chmod +x gradlew
             ./gradlew ":${GRADLE_MODULE}:generateBaselineProfile" --no-build-cache --no-daemon
