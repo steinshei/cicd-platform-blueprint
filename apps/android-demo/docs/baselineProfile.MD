@@ -14,7 +14,7 @@
 - **工作流**：仓库根目录 [`.github/workflows/android-demo-baseline-profile.yaml`](../../../.github/workflows/android-demo-baseline-profile.yaml)（路径以仓库根为准）。
 - **何时运行**：向 `develop` / `main` / `release/**` 发起 PR 或推送，且变更落在 `apps/android-demo/**` 或上述 workflow 本身时。
 - **做什么**：
-  1. 无模拟器：`:app:assembleRelease`、`:benchmark:assembleBenchmark`，尽快发现编译问题。
+  1. 无模拟器：`:app:assembleRelease`、`:benchmark:assembleBenchmarkBenchmark`（须写全名；`:benchmark:assembleBenchmark` 会与多个 variant 前缀冲突导致 Gradle 报错），尽快发现编译问题。
   2. 在 `ubuntu-latest` 上用模拟器执行 `:app:generateBaselineProfile --no-build-cache`，再对 `app/src/main/baselineProfiles/` 做 `git diff`；与已提交内容不一致则失败。
 - **本地对齐**：在 `apps/android-demo` 下执行与上相同的 `./gradlew :app:generateBaselineProfile --no-build-cache`，将生成的 `baseline-prof.txt` / `startup-prof.txt` 一并提交。
 
