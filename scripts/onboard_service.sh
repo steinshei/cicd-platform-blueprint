@@ -141,7 +141,7 @@ permissions:
 
 jobs:
   pipeline:
-    uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.1
+    uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.2
     with:
       service_name: ${service}
       context_dir: apps/${service}
