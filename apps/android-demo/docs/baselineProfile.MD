@@ -16,6 +16,7 @@
 - **做什么**：
   1. 无模拟器：`:app:assembleRelease`、`:benchmark:assembleBenchmarkBenchmark`（须写全名；`:benchmark:assembleBenchmark` 会与多个 variant 前缀冲突导致 Gradle 报错），尽快发现编译问题。
   2. 在 `ubuntu-latest` 上用模拟器执行 `:app:generateBaselineProfile --no-build-cache`，再对 `app/src/main/baselineProfiles/` 做 `git diff`；与已提交内容不一致则失败。
+- **CI 排障（adb `device offline` / 启动慢）**：可复用 workflow 在 `android-emulator-runner` 前执行 [KVM udev 步骤](https://github.com/ReactiveCircus/android-emulator-runner#running-hardware-accelerated-emulators-on-linux-runners)，并将 `emulator-boot-timeout` 设为 900 秒；仍不稳定时可换更大规格 Linux runner 或自托管。
 - **本地对齐**：在 `apps/android-demo` 下执行与上相同的 `./gradlew :app:generateBaselineProfile --no-build-cache`，将生成的 `baseline-prof.txt` / `startup-prof.txt` 一并提交。
 
 可复用逻辑在 [`.github/workflows/reusable-android-baseline-profile.yml`](../../../.github/workflows/reusable-android-baseline-profile.yml)。发布到组织平台仓时可将同文件合并进 `steinshei/platform-cicd` 并打新标签，入口 workflow 中把 `uses: ./.github/workflows/reusable-android-baseline-profile.yml` 改为 `uses: steinshei/platform-cicd/.github/workflows/reusable-android-baseline-profile.yml@<tag>`。
