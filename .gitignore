@@ -9,3 +9,6 @@ dora/events/
 
 # OS/editor
 .DS_Store
+
+# Gradle files
+/.idea
