@@ -1,0 +1,53 @@
+# Baseline Profile: macrobenchmark generation must run on a device/emulator (not reusable-ci Docker flow).
+name: android-demo-baseline-profile
+
+on:
+  pull_request:
+    branches: [develop, main, "release/**"]
+    paths:
+      - "apps/android-demo/**"
+      - ".github/workflows/android-demo-baseline-profile.yaml"
+      - ".github/workflows/reusable-android-baseline-profile.yml"
+  push:
+    branches: [develop, main, "release/**"]
+    paths:
+      - "apps/android-demo/**"
+      - ".github/workflows/android-demo-baseline-profile.yaml"
+      - ".github/workflows/reusable-android-baseline-profile.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-android-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile Android modules
+        working-directory: apps/android-demo
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew :app:assembleRelease :benchmark:assembleBenchmark --no-daemon
+
+  # After merging reusable-android-baseline-profile.yml into steinshei/platform-cicd and tagging, switch to:
+  # uses: steinshei/platform-cicd/.github/workflows/reusable-android-baseline-profile.yml@v1.3
+  baseline-profile:
+    needs: [build-android-demo]
+    uses: ./.github/workflows/reusable-android-baseline-profile.yml
+    with:
+      project_dir: apps/android-demo
+      java_version: "17"
+      api_level: 34
+      gradle_module: app

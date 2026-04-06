@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   pipeline:
-    uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.2
+    uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.3
     with:
       service_name: payments-service
       context_dir: apps/payments-service
