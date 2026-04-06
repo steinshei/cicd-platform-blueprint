@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Android Demo</string>
+    <string name="welcome_title">欢迎使用</string>
+    <string name="welcome_message">这是一个简单的 Android Kotlin Demo</string>
+    <string name="button_click">点击我</string>
+    <string name="clicked_text">已被点击 %d 次</string>
+</resources>
