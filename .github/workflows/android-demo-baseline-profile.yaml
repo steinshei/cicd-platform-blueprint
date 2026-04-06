@@ -43,7 +43,7 @@ jobs:
           ./gradlew :app:assembleRelease :benchmark:assembleBenchmarkBenchmark --no-daemon
 
   # After merging reusable-android-baseline-profile.yml into steinshei/platform-cicd and tagging, switch to:
-  # uses: steinshei/platform-cicd/.github/workflows/reusable-android-baseline-profile.yml@v1.4
+  # uses: steinshei/platform-cicd/.github/workflows/reusable-android-baseline-profile.yml@v1.5
   baseline-profile:
     needs: [build-android-demo]
     uses: ./.github/workflows/reusable-android-baseline-profile.yml

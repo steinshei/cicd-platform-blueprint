@@ -19,7 +19,7 @@ permissions:
 jobs:
   pipeline:
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'bot/gitops-dev-')
-    uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.4
+    uses: steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.5
     with:
       service_name: sample-service
       context_dir: apps/sample-service
