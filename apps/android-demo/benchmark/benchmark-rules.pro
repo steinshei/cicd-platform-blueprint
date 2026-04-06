@@ -1,3 +1,6 @@
+# Proguard / R8 rules for the benchmark build type (baseline profile / macrobenchmark).
+# Add keep rules here if instrumentation or generated code is stripped incorrectly.
+
 # 1. 保留所有 Benchmark 相关的注解和测试类
 -keepattributes *Annotation*
 -keep class androidx.benchmark.** { *; }

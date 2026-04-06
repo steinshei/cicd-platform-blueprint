@@ -1,0 +1,71 @@
+# Portable reusable workflow: copy to steinshei/platform-cicd when publishing a new tag,
+# then call from business repos with:
+#   uses: steinshei/platform-cicd/.github/workflows/reusable-android-baseline-profile.yml@vX.Y
+name: Reusable Android Baseline Profile
+
+on:
+  workflow_call:
+    inputs:
+      project_dir:
+        description: Gradle project root (e.g. apps/android-demo)
+        required: true
+        type: string
+      java_version:
+        required: false
+        type: string
+        default: "17"
+      api_level:
+        required: false
+        type: number
+        default: 34
+      gradle_module:
+        description: App module name for generateBaselineProfile (e.g. app)
+        required: false
+        type: string
+        default: app
+
+permissions:
+  contents: read
+
+jobs:
+  verify-baseline-profile:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_PROJECT_DIR: ${{ inputs.project_dir }}
+      GRADLE_MODULE: ${{ inputs.gradle_module }}
+      BASELINE_PROFILES_DIR: ${{ inputs.project_dir }}/${{ inputs.gradle_module }}/src/main/baselineProfiles
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Generate Baseline Profile on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          ANDROID_PROJECT_DIR: ${{ inputs.project_dir }}
+          GRADLE_MODULE: ${{ inputs.gradle_module }}
+          BASELINE_PROFILES_DIR: ${{ inputs.project_dir }}/${{ inputs.gradle_module }}/src/main/baselineProfiles
+        with:
+          api-level: ${{ inputs.api_level }}
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 4096
+          script: |
+            set -euo pipefail
+            cd "${ANDROID_PROJECT_DIR}"
+            chmod +x gradlew
+            ./gradlew ":${GRADLE_MODULE}:generateBaselineProfile" --no-build-cache --no-daemon
+            cd "${GITHUB_WORKSPACE}"
+            if ! git diff --exit-code -- "${BASELINE_PROFILES_DIR}/"; then
+              echo "::error::Baseline profile files differ from the repo. Regenerate locally: cd ${ANDROID_PROJECT_DIR} && ./gradlew :${GRADLE_MODULE}:generateBaselineProfile --no-build-cache"
+              git diff -- "${BASELINE_PROFILES_DIR}/" || true
+              exit 1
+            fi
