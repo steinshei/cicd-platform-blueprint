@@ -3,7 +3,8 @@
 | 文件名 | 优化目标 | 作用时机 |
 |---|---|---|
 | baseline-prof.txt | 运行时流畅度 | 减少滑动卡顿（Jank）、加速页面跳转 |
-| startup-prof.txt | 启动速度 | 针对 Application 到第一帧渲染之间的 DEX 布局优化 |
+| startup-prof.txt | 启动速度 | 针对 Application 到第一帧渲染之间的 DEX 布局优化|
+|
 
 本地生成：
 
@@ -19,12 +20,12 @@
   2. `:benchmark:assembleBenchmarkBenchmark`
   3. `:app:testDebugUnitTest`
 - **本地 CI（Self-hosted Runner）**：使用本地模拟器运行 Macrobenchmark（`benchmark` 模块）。
-  - 通过可复用工作流 [`.github/workflows/reusable-android-macrobenchmark-self-hosted.yml`](../../../.github/workflows/reusable-android-macrobenchmark-self-hosted.yml)
 
+  - 通过平台仓可复用工作流：`steinshei/platform-cicd/.github/workflows/reusable-android-macrobenchmark-self-hosted.yml@v1.8`
   - 默认执行任务：`:benchmark:connectedBenchmarkReleaseAndroidTest`
   - 在模拟器环境默认添加：`-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR`
+  - 默认 Runner 标签：`["self-hosted"]`（先保证可领取，再按需收紧到 `macOS/ARM64` 等）
 
-  - 默认 Runner 标签：`["self-hosted","linux","x64","android"]`（按你的机器实际注册标签调整）
 
 ### 闭环建议
 
@@ -45,6 +46,9 @@
   - `app/build/outputs/bundle/release/*.aab`
 - **下载位置**：GitHub 仓库 `Actions` -> `android-demo-package` -> 选择运行记录 -> `Artifacts`（默认保留 14 天）
 
+- **实现方式**：业务仓入口 workflow 调用平台仓 `steinshei/platform-cicd/.github/workflows/reusable-android-package.yml@v1.8`
+
+
 
 ### 签名打包（手动触发）
 
@@ -58,3 +62,22 @@
 - **产物**：
   - 已签名 APK（来自 `r0adkll/sign-android-release` 输出）
   - Release AAB（用于后续渠道发布）
+
+
+### 上线前最终核对清单（5 条）
+
+1. **Baseline Profile 已更新并提交**  
+   在 `apps/android-demo` 下执行过：`./gradlew :app:generateBaselineProfile --no-build-cache`，并确认 `app/src/main/baselineProfiles/*.txt` 已入库。
+
+2. **云端门禁全绿**  
+   `android-demo-ci` 的 `cloud-gate`（编译 + 单测）在目标分支对应 PR 中通过。
+
+3. **本地 self-hosted 宏基准通过**  
+   `local-macrobenchmark / run-macrobenchmark` 成功执行；若使用模拟器，已显式使用 `suppressErrors=EMULATOR` 且结果符合团队阈值。
+
+4. **打包产物可下载可安装**  
+   `android-demo-package`（或后续签名流）产出 Artifact，APK/AAB 可在 Actions 页面下载并完成安装验证。
+
+5. **分支保护与必需检查已对齐**  
+   仓库 required checks 已覆盖当前实际依赖链路（至少包含 Android 门禁关键检查），避免“流程通过但无法合并”或“漏检直接合并”。
+
