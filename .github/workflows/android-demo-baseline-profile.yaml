@@ -1,25 +1,25 @@
-# Baseline Profile: macrobenchmark generation must run on a device/emulator (not reusable-ci Docker flow).
-name: android-demo-baseline-profile
+name: android-demo-ci
 
 on:
   pull_request:
-    branches: [develop, main, "release/**"]
+    branches: [develop, main, 'release/**']
     paths:
-      - "apps/android-demo/**"
-      - ".github/workflows/android-demo-baseline-profile.yaml"
-      - ".github/workflows/reusable-android-baseline-profile.yml"
+      - apps/android-demo/**
+      - .github/workflows/android-demo-baseline-profile.yaml
+      - .github/workflows/reusable-android-macrobenchmark-self-hosted.yml
   push:
-    branches: [develop, main, "release/**"]
+    branches: [develop, main, 'release/**']
     paths:
-      - "apps/android-demo/**"
-      - ".github/workflows/android-demo-baseline-profile.yaml"
-      - ".github/workflows/reusable-android-baseline-profile.yml"
+      - apps/android-demo/**
+      - .github/workflows/android-demo-baseline-profile.yaml
+      - .github/workflows/reusable-android-macrobenchmark-self-hosted.yml
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build-android-demo:
+  cloud-gate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,26 +29,25 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Compile Android modules
+      - name: Compile and run unit tests (cloud)
         working-directory: apps/android-demo
         run: |
           set -euo pipefail
           chmod +x gradlew
-          # Full task name required: :assembleBenchmark is ambiguous (matches BenchmarkBenchmark / Release / …).
-          ./gradlew :app:assembleRelease :benchmark:assembleBenchmarkBenchmark --no-daemon
+          ./gradlew :app:assembleRelease :benchmark:assembleBenchmarkBenchmark :app:testDebugUnitTest --no-daemon
 
-  # After merging reusable-android-baseline-profile.yml into steinshei/platform-cicd and tagging, switch to:
-  # uses: steinshei/platform-cicd/.github/workflows/reusable-android-baseline-profile.yml@v1.7
-  baseline-profile:
-    needs: [build-android-demo]
-    uses: ./.github/workflows/reusable-android-baseline-profile.yml
+  local-macrobenchmark:
+    needs: [cloud-gate]
+    uses: ./.github/workflows/reusable-android-macrobenchmark-self-hosted.yml
     with:
       project_dir: apps/android-demo
-      java_version: "17"
-      api_level: 34
-      gradle_module: app
+      java_version: '17'
+      benchmark_module: benchmark
+      benchmark_task: connectedCheck
+      # Adjust labels to match your self-hosted runner registration.
+      runner_labels_json: '["self-hosted","linux","x64","android"]'
