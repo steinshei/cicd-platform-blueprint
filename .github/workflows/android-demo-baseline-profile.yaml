@@ -48,8 +48,8 @@ jobs:
       project_dir: apps/android-demo
       java_version: '17'
       benchmark_module: benchmark
-      benchmark_task: connectedCheck
-      # Adjust labels to match your self-hosted runner registration.
-      # For macOS Apple Silicon self-hosted runner, this is usually:
-      # ["self-hosted","macOS","ARM64"]
-      runner_labels_json: '["self-hosted","macOS","ARM64"]'
+
+      benchmark_task: connectedBenchmarkReleaseAndroidTest
+      benchmark_suppress_errors: EMULATOR
+      runner_labels_json: '["self-hosted"]'
+
