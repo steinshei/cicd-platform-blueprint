@@ -13,3 +13,4 @@ dora/events/
 # Gradle files
 /.idea
 /platform-cicd
+/actions-runner
