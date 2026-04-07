@@ -1,6 +1,6 @@
 # Deprecated: 业务仓不再直接使用此重型流程。
 # 当前请通过 .github/workflows/ci-main.yaml 调用平台仓
-# steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.5
+# steinshei/platform-cicd/.github/workflows/reusable-ci.yml@v1.7
 name: reusable-ci
 
 on:
