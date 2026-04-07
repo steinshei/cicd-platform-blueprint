@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   report:
-    uses: steinshei/platform-cicd/.github/workflows/reusable-dora-report.yml@v1.9
+    uses: steinshei/platform-cicd/.github/workflows/reusable-dora-report.yml@v1.9.1
     with:
       window_days: ${{ github.event.inputs.days || '7' }}
       artifact_name: dora-weekly-report

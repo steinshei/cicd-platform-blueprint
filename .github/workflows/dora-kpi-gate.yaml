@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   kpi-gate:
-    uses: steinshei/platform-cicd/.github/workflows/reusable-dora-kpi-gate.yml@v1.9
+    uses: steinshei/platform-cicd/.github/workflows/reusable-dora-kpi-gate.yml@v1.9.1
     with:
       window_days: ${{ github.event.inputs.days || '7' }}
       max_cfr: ${{ github.event.inputs.max_cfr || '15' }}
