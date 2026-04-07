@@ -35,6 +35,19 @@
 4. 达标再发布；不达标回修并重测。
 
 
+### 常见 `exit code 1` 如何快速判断
+
+- **场景 A：Gradle 执行失败**
+  - 日志通常会出现 `Execution failed for task`、`BUILD FAILED`、`AssertionError` 等关键词。
+  - 处理方式：优先看失败 task 对应堆栈（如 `:benchmark:connectedBenchmarkReleaseAndroidTest`）。
+
+- **场景 B：门禁比对失败（`git diff --exit-code`）**
+  - Gradle 可能已成功，但最后在差异校验步骤失败并返回 `exit code 1`。
+  - 处理方式：查看 workflow 最后一段日志，若是 diff 门禁，按提示提交生成物变更后重跑。
+
+排障建议：先确认失败发生在 **Gradle task 执行阶段** 还是 **后置门禁阶段**，这能最快缩小排查范围。
+
+
 ### 打包产物（GitHub Artifacts）
 
 - **工作流**：仓库根目录 [`.github/workflows/android-demo-package.yaml`](../../../.github/workflows/android-demo-package.yaml)

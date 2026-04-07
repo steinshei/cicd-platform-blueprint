@@ -62,8 +62,11 @@ jobs:
           BENCHMARK_SUPPRESS_ERRORS: ${{ inputs.benchmark_suppress_errors }}
         run: |
           set -euo pipefail
-          chmod +x gradlew
+          : "${BENCHMARK_MODULE:?benchmark_module input is required}"
+          : "${BENCHMARK_TASK:?benchmark_task input is required}"
+          : "${BENCHMARK_SUPPRESS_ERRORS:?benchmark_suppress_errors input is required}"
+          chmod +x gradlew || { echo "gradlew not found or not executable in ${PWD}"; exit 1; }
           ./gradlew ":${BENCHMARK_MODULE}:${BENCHMARK_TASK}" \
             -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors="${BENCHMARK_SUPPRESS_ERRORS}" \
-            --no-daemon
+            --no-daemon || { echo "macrobenchmark Gradle task failed"; exit 1; }
 
