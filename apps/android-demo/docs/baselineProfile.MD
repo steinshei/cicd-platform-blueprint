@@ -18,6 +18,7 @@
   2. 在 `ubuntu-latest` 上用模拟器执行 `:app:generateBaselineProfile --no-build-cache`，再对 `app/src/main/baselineProfiles/` 做 `git diff`；与已提交内容不一致则失败。
 - **CI 排障（adb `device offline` / 启动慢）**：可复用 workflow 在 `android-emulator-runner` 前执行 [KVM udev 步骤](https://github.com/ReactiveCircus/android-emulator-runner#running-hardware-accelerated-emulators-on-linux-runners)，并将 `emulator-boot-timeout` 设为 900 秒；仍不稳定时可换更大规格 Linux runner 或自托管。
 - **`gradlew` 找不到**：该 Action 会把 `script` **按行**拆成多次独立的 `sh -c`，目录不跨行保留；可复用 workflow 已设置 `working-directory` 为 Gradle 根目录（如 `apps/android-demo`），并把 Gradle / `git diff` 各写为单行命令。
+- **`The process '/usr/bin/sh' failed with exit code 1`**：在日志里向上查找 Gradle 与 `git diff`。若有 `FAILURE: Build failed` 等，属构建/测试问题；若 Gradle 成功、出现 `::error::Baseline profile` 或 `git diff` 输出，属**已提交的 profile 与 CI 生成结果不一致**，请在本地再生并提交 `app/src/main/baselineProfiles/*.txt`。
 - **本地对齐**：在 `apps/android-demo` 下执行与上相同的 `./gradlew :app:generateBaselineProfile --no-build-cache`，将生成的 `baseline-prof.txt` / `startup-prof.txt` 一并提交。
 
 可复用逻辑在 [`.github/workflows/reusable-android-baseline-profile.yml`](../../../.github/workflows/reusable-android-baseline-profile.yml)。发布到组织平台仓时可将同文件合并进 `steinshei/platform-cicd` 并打新标签，入口 workflow 中把 `uses: ./.github/workflows/reusable-android-baseline-profile.yml` 改为 `uses: steinshei/platform-cicd/.github/workflows/reusable-android-baseline-profile.yml@<tag>`。

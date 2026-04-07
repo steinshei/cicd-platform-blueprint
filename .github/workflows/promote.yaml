@@ -31,7 +31,7 @@ jobs:
 
   promote:
     needs: [validate-branch]
-    uses: steinshei/platform-cicd/.github/workflows/reusable-promote.yml@v1.6
+    uses: steinshei/platform-cicd/.github/workflows/reusable-promote.yml@v1.7
     with:
       service: ${{ github.event.inputs.service }}
       image_tag: ${{ github.event.inputs.image_tag }}
