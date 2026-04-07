@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   package:
-    uses: steinshei/platform-cicd/.github/workflows/reusable-android-package.yml@v1.8
+    uses: steinshei/platform-cicd/.github/workflows/reusable-android-package.yml@v1.9.1
     with:
       project_dir: apps/android-demo
       java_version: '17'
