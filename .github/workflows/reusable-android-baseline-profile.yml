@@ -66,15 +66,8 @@ jobs:
           disable-animations: true
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 4096
-          # android-emulator-runner invokes `sh -c` (dash on Ubuntu); pipefail is bash-only.
+          # android-emulator-runner parses script into one `sh -c` per non-empty line; cwd does not carry across lines.
+          working-directory: ${{ inputs.project_dir }}
           script: |
-            set -eu
-            cd "${ANDROID_PROJECT_DIR}"
-            chmod +x gradlew
-            ./gradlew ":${GRADLE_MODULE}:generateBaselineProfile" --no-build-cache --no-daemon
-            cd "${GITHUB_WORKSPACE}"
-            if ! git diff --exit-code -- "${BASELINE_PROFILES_DIR}/"; then
-              echo "::error::Baseline profile files differ from the repo. Regenerate locally: cd ${ANDROID_PROJECT_DIR} && ./gradlew :${GRADLE_MODULE}:generateBaselineProfile --no-build-cache"
-              git diff -- "${BASELINE_PROFILES_DIR}/" || true
-              exit 1
-            fi
+            set -eu && chmod +x gradlew && ./gradlew ":${GRADLE_MODULE}:generateBaselineProfile" --no-build-cache --no-daemon
+            cd "${GITHUB_WORKSPACE}" && git diff --exit-code -- "${BASELINE_PROFILES_DIR}/" || ( echo "::error::Baseline profile files differ from the repo. Regenerate locally: cd ${ANDROID_PROJECT_DIR} && ./gradlew :${GRADLE_MODULE}:generateBaselineProfile --no-build-cache"; git diff -- "${BASELINE_PROFILES_DIR}/" || true; exit 1 )
