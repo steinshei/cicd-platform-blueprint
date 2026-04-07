@@ -48,6 +48,8 @@ jobs:
       project_dir: apps/android-demo
       java_version: '17'
       benchmark_module: benchmark
+
       benchmark_task: connectedBenchmarkReleaseAndroidTest
       benchmark_suppress_errors: EMULATOR
       runner_labels_json: '["self-hosted"]'
+

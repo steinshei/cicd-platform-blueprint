@@ -20,12 +20,14 @@ on:
         description: Gradle task for macrobenchmark instrumentation tests
         required: false
         type: string
+
         default: connectedBenchmarkReleaseAndroidTest
       benchmark_suppress_errors:
         description: Comma-separated androidx.benchmark suppressed errors
         required: false
         type: string
         default: EMULATOR
+
       runner_labels_json:
         description: JSON array for self-hosted runner labels
         required: false
@@ -56,6 +58,7 @@ jobs:
         env:
           BENCHMARK_MODULE: ${{ inputs.benchmark_module }}
           BENCHMARK_TASK: ${{ inputs.benchmark_task }}
+
           BENCHMARK_SUPPRESS_ERRORS: ${{ inputs.benchmark_suppress_errors }}
         run: |
           set -euo pipefail
@@ -63,3 +66,4 @@ jobs:
           ./gradlew ":${BENCHMARK_MODULE}:${BENCHMARK_TASK}" \
             -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors="${BENCHMARK_SUPPRESS_ERRORS}" \
             --no-daemon
+
