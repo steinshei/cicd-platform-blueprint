@@ -25,7 +25,7 @@ on:
         description: JSON array for self-hosted runner labels
         required: false
         type: string
-        default: '["self-hosted","linux","x64","android"]'
+        default: '["self-hosted"]'
 
 permissions:
   contents: read
@@ -48,7 +48,10 @@ jobs:
 
       - name: Run macrobenchmark on local emulator (self-hosted)
         working-directory: ${{ inputs.project_dir }}
+        env:
+          BENCHMARK_MODULE: ${{ inputs.benchmark_module }}
+          BENCHMARK_TASK: ${{ inputs.benchmark_task }}
         run: |
           set -euo pipefail
           chmod +x gradlew
-          ./gradlew ":${{ inputs.benchmark_module }}:${{ inputs.benchmark_task }}" --no-daemon
+          ./gradlew ":${BENCHMARK_MODULE}:${BENCHMARK_TASK}" --no-daemon

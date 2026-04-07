@@ -50,4 +50,6 @@ jobs:
       benchmark_module: benchmark
       benchmark_task: connectedCheck
       # Adjust labels to match your self-hosted runner registration.
-      runner_labels_json: '["self-hosted","linux","x64","android"]'
+      # For macOS Apple Silicon self-hosted runner, this is usually:
+      # ["self-hosted","macOS","ARM64"]
+      runner_labels_json: '["self-hosted","macOS","ARM64"]'
