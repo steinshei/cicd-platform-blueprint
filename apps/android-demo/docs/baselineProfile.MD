@@ -32,3 +32,29 @@
 2. 云端：编译 + 单测基础门禁。
 3. 本地 self-hosted：Macrobenchmark 启动性能验证。
 4. 达标再发布；不达标回修并重测。
+
+
+### 打包产物（GitHub Artifacts）
+
+- **工作流**：仓库根目录 [`.github/workflows/android-demo-package.yaml`](../../../.github/workflows/android-demo-package.yaml)
+- **触发方式**：
+  1. 手动触发（`workflow_dispatch`）
+  2. 推送 tag：`android-demo-v*`
+- **产物内容**：
+  - `app/build/outputs/apk/release/*.apk`
+  - `app/build/outputs/bundle/release/*.aab`
+- **下载位置**：GitHub 仓库 `Actions` -> `android-demo-package` -> 选择运行记录 -> `Artifacts`（默认保留 14 天）
+
+
+### 签名打包（手动触发）
+
+- **工作流**：仓库根目录 [`.github/workflows/android-demo-package-signed.yaml`](../../../.github/workflows/android-demo-package-signed.yaml)
+- **触发方式**：`workflow_dispatch`
+- **仓库 Secrets（必填）**：
+  - `ANDROID_KEYSTORE_BASE64`（keystore 文件的 base64）
+  - `ANDROID_KEYSTORE_PASSWORD`
+  - `ANDROID_KEY_ALIAS`
+  - `ANDROID_KEY_PASSWORD`
+- **产物**：
+  - 已签名 APK（来自 `r0adkll/sign-android-release` 输出）
+  - Release AAB（用于后续渠道发布）
