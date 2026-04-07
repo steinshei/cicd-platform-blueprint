@@ -50,5 +50,4 @@ jobs:
       benchmark_module: benchmark
       benchmark_task: connectedBenchmarkReleaseAndroidTest
       benchmark_suppress_errors: EMULATOR
-      # Start broad to ensure pickup; tighten labels after runner is stable.
       runner_labels_json: '["self-hosted"]'
