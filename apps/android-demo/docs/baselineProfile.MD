@@ -20,10 +20,12 @@
   2. `:benchmark:assembleBenchmarkBenchmark`
   3. `:app:testDebugUnitTest`
 - **本地 CI（Self-hosted Runner）**：使用本地模拟器运行 Macrobenchmark（`benchmark` 模块）。
+
   - 通过平台仓可复用工作流：`steinshei/platform-cicd/.github/workflows/reusable-android-macrobenchmark-self-hosted.yml@v1.8`
   - 默认执行任务：`:benchmark:connectedBenchmarkReleaseAndroidTest`
   - 在模拟器环境默认添加：`-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR`
   - 默认 Runner 标签：`["self-hosted"]`（先保证可领取，再按需收紧到 `macOS/ARM64` 等）
+
 
 ### 闭环建议
 
@@ -43,7 +45,9 @@
   - `app/build/outputs/apk/release/*.apk`
   - `app/build/outputs/bundle/release/*.aab`
 - **下载位置**：GitHub 仓库 `Actions` -> `android-demo-package` -> 选择运行记录 -> `Artifacts`（默认保留 14 天）
+
 - **实现方式**：业务仓入口 workflow 调用平台仓 `steinshei/platform-cicd/.github/workflows/reusable-android-package.yml@v1.8`
+
 
 
 ### 签名打包（手动触发）
@@ -58,6 +62,7 @@
 - **产物**：
   - 已签名 APK（来自 `r0adkll/sign-android-release` 输出）
   - Release AAB（用于后续渠道发布）
+
 
 ### 上线前最终核对清单（5 条）
 
@@ -75,3 +80,4 @@
 
 5. **分支保护与必需检查已对齐**  
    仓库 required checks 已覆盖当前实际依赖链路（至少包含 Android 门禁关键检查），避免“流程通过但无法合并”或“漏检直接合并”。
+
