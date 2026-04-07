@@ -11,32 +11,10 @@ permissions:
 
 jobs:
   package:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build release APK and AAB
-        working-directory: apps/android-demo
-        run: |
-          set -euo pipefail
-          chmod +x gradlew
-          ./gradlew :app:assembleRelease :app:bundleRelease --no-daemon
-
-      - name: Upload Android artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-demo-release-${{ github.run_number }}
-          retention-days: 14
-          path: |
-            apps/android-demo/app/build/outputs/apk/release/*.apk
-            apps/android-demo/app/build/outputs/bundle/release/*.aab
+    uses: steinshei/platform-cicd/.github/workflows/reusable-android-package.yml@v1.8
+    with:
+      project_dir: apps/android-demo
+      java_version: '17'
+      package_tasks: ':app:assembleRelease :app:bundleRelease'
+      artifact_name: android-demo-release
+      retention_days: 14
