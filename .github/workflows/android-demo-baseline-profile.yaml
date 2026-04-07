@@ -18,7 +18,9 @@ permissions:
 
 jobs:
   cloud-gate:
+
     uses: steinshei/platform-cicd/.github/workflows/reusable-android-gate.yml@v1.9.1
+
     with:
       project_dir: apps/android-demo
       java_version: '17'
@@ -27,7 +29,9 @@ jobs:
 
   local-macrobenchmark:
     needs: [cloud-gate]
+
     uses: steinshei/platform-cicd/.github/workflows/reusable-android-macrobenchmark-self-hosted.yml@v1.9.1
+
     with:
       project_dir: apps/android-demo
       java_version: '17'
