@@ -20,7 +20,7 @@
   - `security / semgrep`
   - `security / codeql (actions, none)`
   - `security / codeql (go, autobuild)`
-  - `pr-guard / main-source-guard`
+  - `pr-guard / main-source-guard (pull_request)`
 - [ ] develop 保护开启，要求必须通过以下检查：
   - `pipeline / validate-build-scan`
   - `security / semgrep`

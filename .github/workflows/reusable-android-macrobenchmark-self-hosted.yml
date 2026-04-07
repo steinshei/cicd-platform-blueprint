@@ -1,0 +1,72 @@
+name: Reusable Android Macrobenchmark (Self-hosted)
+
+on:
+  workflow_call:
+    inputs:
+      project_dir:
+        description: Gradle project root (e.g. apps/android-demo)
+        required: true
+        type: string
+      java_version:
+        required: false
+        type: string
+        default: "17"
+      benchmark_module:
+        description: Macrobenchmark module name (e.g. benchmark)
+        required: false
+        type: string
+        default: benchmark
+      benchmark_task:
+        description: Gradle task for macrobenchmark instrumentation tests
+        required: false
+        type: string
+
+        default: connectedBenchmarkReleaseAndroidTest
+      benchmark_suppress_errors:
+        description: Comma-separated androidx.benchmark suppressed errors
+        required: false
+        type: string
+        default: EMULATOR
+
+      runner_labels_json:
+        description: JSON array for self-hosted runner labels
+        required: false
+        type: string
+        default: '["self-hosted"]'
+
+permissions:
+  contents: read
+
+jobs:
+  run-macrobenchmark:
+    runs-on: ${{ fromJson(inputs.runner_labels_json) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run macrobenchmark on local emulator (self-hosted)
+        working-directory: ${{ inputs.project_dir }}
+        env:
+          BENCHMARK_MODULE: ${{ inputs.benchmark_module }}
+          BENCHMARK_TASK: ${{ inputs.benchmark_task }}
+
+          BENCHMARK_SUPPRESS_ERRORS: ${{ inputs.benchmark_suppress_errors }}
+        run: |
+          set -euo pipefail
+          : "${BENCHMARK_MODULE:?benchmark_module input is required}"
+          : "${BENCHMARK_TASK:?benchmark_task input is required}"
+          : "${BENCHMARK_SUPPRESS_ERRORS:?benchmark_suppress_errors input is required}"
+          chmod +x gradlew || { echo "gradlew not found or not executable in ${PWD}"; exit 1; }
+          ./gradlew ":${BENCHMARK_MODULE}:${BENCHMARK_TASK}" \
+            -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors="${BENCHMARK_SUPPRESS_ERRORS}" \
+            --no-daemon || { echo "macrobenchmark Gradle task failed"; exit 1; }
+

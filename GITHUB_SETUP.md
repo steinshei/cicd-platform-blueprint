@@ -67,7 +67,7 @@ main 分支推荐必需检查：
 - `security / semgrep`
 - `security / codeql (actions, none)`
 - `security / codeql (go, autobuild)`
-- `pr-guard / main-source-guard`
+- `pr-guard / main-source-guard (pull_request)`
 
 develop 分支推荐必需检查：
 - `pipeline / validate-build-scan`

@@ -9,3 +9,8 @@ dora/events/
 
 # OS/editor
 .DS_Store
+
+# Gradle files
+/.idea
+/platform-cicd
+/actions-runner

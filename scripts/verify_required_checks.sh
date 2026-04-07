@@ -23,7 +23,7 @@ expected_main='[
   "security / semgrep",
   "security / codeql (actions, none)",
   "security / codeql (go, autobuild)",
-  "pr-guard / main-source-guard"
+  "pr-guard / main-source-guard (pull_request)"
 ]'
 
 expected_develop='[

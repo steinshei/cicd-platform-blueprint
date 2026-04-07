@@ -1,0 +1,43 @@
+name: android-demo-ci
+
+on:
+  pull_request:
+    branches: [develop, main, 'release/**']
+    paths:
+      - apps/android-demo/**
+      - .github/workflows/android-demo-baseline-profile.yaml
+  push:
+    branches: [develop, main, 'release/**']
+    paths:
+      - apps/android-demo/**
+      - .github/workflows/android-demo-baseline-profile.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cloud-gate:
+
+    uses: steinshei/platform-cicd/.github/workflows/reusable-android-gate.yml@v1.9.1
+
+    with:
+      project_dir: apps/android-demo
+      java_version: '17'
+      assemble_tasks: ':app:assembleRelease :benchmark:assembleBenchmarkBenchmark'
+      unit_test_tasks: ':app:testDebugUnitTest'
+
+  local-macrobenchmark:
+    needs: [cloud-gate]
+
+    uses: steinshei/platform-cicd/.github/workflows/reusable-android-macrobenchmark-self-hosted.yml@v1.9.1
+
+    with:
+      project_dir: apps/android-demo
+      java_version: '17'
+      benchmark_module: benchmark
+
+      benchmark_task: connectedBenchmarkReleaseAndroidTest
+      benchmark_suppress_errors: EMULATOR
+      runner_labels_json: '["self-hosted"]'
+
