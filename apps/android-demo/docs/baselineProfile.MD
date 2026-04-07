@@ -21,10 +21,8 @@
   3. `:app:testDebugUnitTest`
 - **本地 CI（Self-hosted Runner）**：使用本地模拟器运行 Macrobenchmark（`benchmark` 模块）。
   - 通过平台仓可复用工作流：`steinshei/platform-cicd/.github/workflows/reusable-android-macrobenchmark-self-hosted.yml@v1.8`
-
   - 默认执行任务：`:benchmark:connectedBenchmarkReleaseAndroidTest`
   - 在模拟器环境默认添加：`-Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR`
-
   - 默认 Runner 标签：`["self-hosted"]`（先保证可领取，再按需收紧到 `macOS/ARM64` 等）
 
 ### 闭环建议
