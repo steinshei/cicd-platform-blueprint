@@ -1,0 +1,42 @@
+name: android-demo-package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'android-demo-v*'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release APK and AAB
+        working-directory: apps/android-demo
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew :app:assembleRelease :app:bundleRelease --no-daemon
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-demo-release-${{ github.run_number }}
+          retention-days: 14
+          path: |
+            apps/android-demo/app/build/outputs/apk/release/*.apk
+            apps/android-demo/app/build/outputs/bundle/release/*.aab
